@@ -193,6 +193,7 @@ build_linux_arm64() {
   if [[ ! -d "$CACHE/src/.git" ]]; then
     git clone --depth 1 --branch "$Z3_TAG" https://github.com/Z3Prover/z3.git "$CACHE/src"
   fi
+  patch_z3_templates
   local build="$CACHE/linux-arm64-build"
   rm -rf "$build"
   cmake -S "$CACHE/src" -B "$build" \
@@ -203,7 +204,7 @@ build_linux_arm64() {
     -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
     -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
     -DCMAKE_C_FLAGS="-include $compat" \
-    -DCMAKE_CXX_FLAGS="-include cstdint -include $compat" \
+    -DCMAKE_CXX_FLAGS="-include cstdint -include $compat -Wno-template-body" \
     -DZ3_BUILD_LIBZ3_SHARED=ON \
     -DZ3_SINGLE_THREADED=ON \
     -DZ3_USE_LIB_GMP=OFF \
@@ -224,6 +225,16 @@ build_linux_arm64() {
   echo "linux-arm64 libz3 needs ${max:-unknown}"
   rm -rf "$build"
   stage_native linux-arm64 "$out/libz3.so"
+}
+
+# GCC 14+ reports ill-formed template bodies that Z3 4.12.2 never instantiates.
+# get_elem and m_lower_bound are the members the compiler itself suggests.
+patch_z3_templates() {
+  local sm="$CACHE/src/src/math/lp/static_matrix.h"
+  local ci="$CACHE/src/src/math/lp/column_info.h"
+  [[ -f "$sm" && -f "$ci" ]] || return 0
+  sed -i 's/v\.m_matrix\.get(v\.m_row, v\.m_col)/v.m_matrix.get_elem(v.m_row, v.m_col)/' "$sm"
+  sed -i 's/c\.m_low_bound/c.m_lower_bound/' "$ci"
 }
 
 if [[ "$BUILD_LINUX_ARM64" == 1 ]]; then build_linux_arm64; fi

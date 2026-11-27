@@ -1,0 +1,53 @@
+{
+  "name": "vsharp",
+  "displayName": "V#",
+  "description": "Syntax highlighting for V#, a verifiable .NET language.",
+  "version": "0.1.0",
+  "publisher": "vsharp",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "vsharp",
+    "v#",
+    "syntax"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluechiperic/vsharp.git"
+  },
+  "scripts": {
+    "test": "node test/highlight.test.mjs"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "vsharp",
+        "aliases": ["V#", "vsharp"],
+        "extensions": [".vs"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vsharp",
+        "scopeName": "source.vsharp",
+        "path": "./syntaxes/vsharp.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[vsharp]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      }
+    }
+  },
+  "devDependencies": {
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.2.0"
+  }
+}

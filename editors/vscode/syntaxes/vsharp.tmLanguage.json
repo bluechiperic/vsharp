@@ -1,0 +1,243 @@
+{
+  "scopeName": "source.vsharp",
+  "name": "V#",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#tokens" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "//.*",
+      "name": "comment.line.double-slash.vsharp"
+    },
+    "tokens": {
+      "patterns": [
+        { "include": "#string" },
+        { "include": "#attribute" },
+        { "include": "#grad-fn" },
+        { "include": "#fn-decl" },
+        { "include": "#type-decl" },
+        { "include": "#use-decl" },
+        { "include": "#effects-clause" },
+        { "include": "#hole" },
+        { "include": "#lambda" },
+        { "include": "#method-call" },
+        { "include": "#property" },
+        { "include": "#constructor-call" },
+        { "include": "#function-call" },
+        { "include": "#binding" },
+        { "include": "#boolean" },
+        { "include": "#special-var" },
+        { "include": "#builtin-type" },
+        { "include": "#keyword" },
+        { "include": "#number" },
+        { "include": "#operator" },
+        { "include": "#punctuation" },
+        { "include": "#constant-caps" },
+        { "include": "#identifier" }
+      ]
+    },
+    "string": {
+      "name": "string.quoted.double.vsharp",
+      "begin": "\"",
+      "end": "\"|$",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.vsharp" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.vsharp" }
+      },
+      "patterns": [
+        {
+          "match": "\\\\(?:[\\\\\"ntr0{}])",
+          "name": "constant.character.escape.vsharp"
+        },
+        {
+          "name": "meta.interpolation.vsharp",
+          "begin": "\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.interpolation.begin.vsharp" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.interpolation.end.vsharp" }
+          },
+          "patterns": [
+            { "include": "#tokens" }
+          ]
+        }
+      ]
+    },
+    "attribute": {
+      "match": "(@)([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)",
+      "captures": {
+        "1": { "name": "punctuation.definition.attribute.vsharp" },
+        "2": { "name": "entity.name.type.attribute.vsharp" }
+      }
+    },
+    "grad-fn": {
+      "match": "(?<![\\w.])(fn)[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*(=)[ \\t]*(grad)[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]+(wrt)[ \\t]+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.other.fn.vsharp" },
+        "2": { "name": "entity.name.function.vsharp" },
+        "3": { "name": "keyword.operator.assignment.vsharp" },
+        "4": { "name": "keyword.other.grad.vsharp" },
+        "5": { "name": "entity.name.function.vsharp" },
+        "6": { "name": "keyword.other.grad.vsharp" },
+        "7": { "name": "variable.parameter.vsharp" }
+      }
+    },
+    "fn-decl": {
+      "match": "(?<![\\w.])(?:(spec|lemma|extern)[ \\t]+)?(fn)[ \\t]+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.other.fn.vsharp" },
+        "2": { "name": "keyword.other.fn.vsharp" },
+        "3": { "name": "entity.name.function.vsharp" }
+      }
+    },
+    "type-decl": {
+      "match": "(?<![\\w.])(type|class|interface|exception|module|const)[ \\t]+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.other.declaration.vsharp" },
+        "2": { "name": "entity.name.type.vsharp" }
+      }
+    },
+    "use-decl": {
+      "begin": "(?<![\\w.])(use)\\b",
+      "beginCaptures": {
+        "1": { "name": "keyword.other.use.vsharp" }
+      },
+      "end": "$",
+      "patterns": [
+        {
+          "match": "[A-Za-z_][A-Za-z0-9_]*",
+          "name": "entity.name.namespace.vsharp"
+        },
+        {
+          "match": "\\.",
+          "name": "punctuation.accessor.vsharp"
+        }
+      ]
+    },
+    "effects-clause": {
+      "begin": "(?<![\\w.])(effects)\\b",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.contract.vsharp" }
+      },
+      "end": "(?=\\b(?:from|requires|ensures|decreases|throws|invariant)\\b)|(?=[{}])|$",
+      "patterns": [
+        {
+          "match": "\\b(io|device|async)\\b",
+          "name": "constant.language.effect.vsharp"
+        },
+        {
+          "match": ",",
+          "name": "punctuation.separator.vsharp"
+        }
+      ]
+    },
+    "hole": {
+      "match": "(\\?)([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "punctuation.definition.hole.vsharp" },
+        "2": { "name": "entity.name.function.hole.vsharp" }
+      }
+    },
+    "lambda": {
+      "match": "(?<![\\w.])([A-Za-z_][A-Za-z0-9_]*)[ \\t]*(=>)",
+      "captures": {
+        "1": { "name": "variable.parameter.vsharp" },
+        "2": { "name": "keyword.operator.arrow.vsharp" }
+      }
+    },
+    "method-call": {
+      "match": "(\\.)([A-Za-z_][A-Za-z0-9_]*)(?=[ \\t]*\\()",
+      "captures": {
+        "1": { "name": "punctuation.accessor.vsharp" },
+        "2": { "name": "entity.name.function.vsharp" }
+      }
+    },
+    "property": {
+      "match": "(\\.)([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "punctuation.accessor.vsharp" },
+        "2": { "name": "variable.other.property.vsharp" }
+      }
+    },
+    "constructor-call": {
+      "match": "(?<![\\w.])([A-Z][A-Za-z0-9_]*)(?=[ \\t]*\\()",
+      "name": "entity.name.type.constructor.vsharp"
+    },
+    "function-call": {
+      "match": "(?<![\\w.])([a-z_][A-Za-z0-9_]*)(?=[ \\t]*\\()",
+      "name": "entity.name.function.call.vsharp"
+    },
+    "binding": {
+      "match": "(?<![\\w.])([A-Za-z_][A-Za-z0-9_]*)(?=[ \\t]*:)",
+      "name": "variable.parameter.vsharp"
+    },
+    "boolean": {
+      "match": "\\b(true|false)\\b",
+      "name": "constant.language.vsharp"
+    },
+    "special-var": {
+      "match": "\\b(self|result)\\b",
+      "name": "variable.language.vsharp"
+    },
+    "builtin-type": {
+      "match": "\\b(Int32|Int|Bool|Unit|Float32|Float64|Float|Decimal|String|Date|Array|Map|Set|Tensor|Option|Result|None|Some|Ok|Err)\\b",
+      "name": "support.type.vsharp"
+    },
+    "keyword": {
+      "match": "\\b(implements|decreases|invariant|exception|interface|continue|requires|ensures|forall|exists|effects|assert|return|extern|lemma|module|throws|tensor|where|while|match|ghost|class|const|break|print|await|catch|throw|trigger|total|spec|type|else|then|with|from|use|let|var|set|for|try|wrt|when|fn|if|do|in)\\b",
+      "name": "keyword.control.vsharp"
+    },
+    "number": {
+      "patterns": [
+        {
+          "match": "\\b\\d+(?:\\.\\d+)?m\\b",
+          "name": "constant.numeric.decimal.vsharp"
+        },
+        {
+          "match": "\\b\\d+\\.\\d+\\b",
+          "name": "constant.numeric.float.vsharp"
+        },
+        {
+          "match": "\\b\\d+\\b",
+          "name": "constant.numeric.integer.vsharp"
+        }
+      ]
+    },
+    "operator": {
+      "patterns": [
+        {
+          "match": "==>|==|=>|!=|<=|>=|->|&&|\\|\\||\\.\\.",
+          "name": "keyword.operator.vsharp"
+        },
+        {
+          "match": "[-+*/%!=<>|&]",
+          "name": "keyword.operator.vsharp"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        { "match": "[{}]", "name": "punctuation.definition.block.vsharp" },
+        { "match": "[\\[\\]]", "name": "punctuation.definition.brackets.vsharp" },
+        { "match": "[()]", "name": "punctuation.definition.group.vsharp" },
+        { "match": ",", "name": "punctuation.separator.comma.vsharp" },
+        { "match": ":", "name": "punctuation.separator.colon.vsharp" },
+        { "match": ";", "name": "punctuation.terminator.vsharp" },
+        { "match": "\\.", "name": "punctuation.accessor.vsharp" }
+      ]
+    },
+    "constant-caps": {
+      "match": "\\b[A-Z][A-Z0-9_]+\\b",
+      "name": "constant.other.caps.vsharp"
+    },
+    "identifier": {
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b",
+      "name": "variable.other.vsharp"
+    }
+  }
+}

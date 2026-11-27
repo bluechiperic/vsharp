@@ -161,6 +161,10 @@ vsharpc explain TN3001
 vsharpc check samples/search.vs
 ```
 
+## Editor
+
+[editors/vscode](editors/vscode) is a VS Code extension that highlights `.vs` files: keywords, contracts, effects, typed holes, and string interpolation. Install steps are in that directory's README.
+
 ## Read next
 
 - [SPEC.md](SPEC.md) is the language: syntax, contracts, verification, effects, and the IL the compiler emits.

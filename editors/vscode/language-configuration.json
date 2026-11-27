@@ -1,0 +1,37 @@
+{
+  "comments": {
+    "lineComment": "//"
+  },
+  "brackets": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"]
+  ],
+  "autoClosingPairs": [
+    { "open": "{", "close": "}" },
+    { "open": "[", "close": "]" },
+    { "open": "(", "close": ")" },
+    { "open": "\"", "close": "\"", "notIn": ["string"] }
+  ],
+  "surroundingPairs": [
+    ["{", "}"],
+    ["[", "]"],
+    ["(", ")"],
+    ["\"", "\""]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": "^.*\\{[^}\"']*$|^.*\\([^)\"']*$|^.*\\[[^\\]\"']*$",
+    "decreaseIndentPattern": "^\\s*[}\\])]"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": "^[ \\t]*(?:(?:spec|lemma|extern)[ \\t]+)?fn\\b[^{]*$",
+      "action": { "indent": "indent" }
+    },
+    {
+      "beforeText": "^[ \\t]*(?:requires|ensures|decreases|effects|throws|invariant)\\b.*$",
+      "action": { "indent": "none" }
+    }
+  ],
+  "wordPattern": "\\?[A-Za-z_][A-Za-z0-9_]*|-?\\d+(?:\\.\\d+)?m?|[A-Za-z_][A-Za-z0-9_]*"
+}

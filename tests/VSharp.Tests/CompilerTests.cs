@@ -5,6 +5,8 @@ using VSharp.Compiler;
 using VSharp.Runtime;
 using Check = Xunit.Assert;
 
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
+
 namespace VSharp.Tests;
 
 public class CompilerTests
@@ -18,11 +20,14 @@ public class CompilerTests
         return dir?.FullName ?? throw new InvalidOperationException("VSharp.sln not found above the test directory");
     }
 
+    // CI runners are slower than a quiet desktop, and Z3's per-query limit is wall time. The product default stays 5s.
+    private const int TestTimeoutMs = 20000;
+
     private static (CompileResult Result, string Source) Compile(string relativePath)
     {
         var path = Path.Combine(Root, relativePath);
         var source = File.ReadAllText(path);
-        return (Compilation.Check(source, path), source);
+        return (Compilation.Check(source, path, new CompileOptions(TimeoutMs: TestTimeoutMs)), source);
     }
 
     // Each sample is built once: a loaded assembly locks its file, so rebuilding to the same path would fail.
@@ -42,7 +47,7 @@ public class CompilerTests
 
     private static Type BuildSource(string source, string module)
     {
-        var result = Compilation.Check(source, module + ".vs");
+        var result = Compilation.Check(source, module + ".vs", new CompileOptions(TimeoutMs: TestTimeoutMs));
         Check.True(result.Ok, string.Join("\n", result.Diagnostics.Select(d => $"{d.Code} {d.Line}:{d.Col} {d.Message}")));
         return Assembly.LoadFile(Compilation.Emit(result, source, TempDir())).GetType(module)!;
     }

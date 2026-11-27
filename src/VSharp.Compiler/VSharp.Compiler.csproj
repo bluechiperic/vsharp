@@ -4,8 +4,9 @@
     <ProjectReference Include="..\VSharp.Runtime\VSharp.Runtime.csproj" />
   </ItemGroup>
 
+  <!-- Local feed only. build/fetch-z3.sh packs the AnyCPU binding and per-RID libz3. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Z3" Version="4.12.2" />
+    <PackageReference Include="VSharp.Z3" Version="4.12.2" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -13,6 +14,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>vsharpc</AssemblyName>
+    <RootNamespace>VSharp.Compiler</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>vsharpc</ToolCommandName>
+    <PackageId>vsharpc</PackageId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>
+

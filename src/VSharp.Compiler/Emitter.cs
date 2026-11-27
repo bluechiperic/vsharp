@@ -166,10 +166,19 @@ public sealed class Emitter(ModuleDecl module, IReadOnlyList<string> sources, bo
         var dir = Path.GetDirectoryName(asm.Location)!;
         foreach (var r in asm.GetReferencedAssemblies())
         {
+            // A self-contained publish lays the shared framework next to the compiler. Loading
+            // System.Private.CoreLib from that folder aborts the process, and the emitted program
+            // gets the framework from its own runtimeconfig, not from these copies.
+            if (r.Name is null || IsSharedFramework(r.Name)) continue;
             var file = Path.Combine(dir, r.Name + ".dll");
             if (File.Exists(file) && !done.Contains(r.Name!)) CopyRuntime(Assembly.LoadFrom(file), outDir, done);
         }
     }
+
+    private static bool IsSharedFramework(string name) =>
+        name is "netstandard" or "mscorlib"
+        || name.StartsWith("System.", StringComparison.Ordinal)
+        || name.StartsWith("Microsoft.", StringComparison.Ordinal);
 
     // ---------- types ----------
 

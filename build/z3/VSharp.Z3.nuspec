@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>VSharp.Z3</id>
+    <version>4.12.2</version>
+    <authors>Microsoft</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/Z3Prover/z3</projectUrl>
+    <description>Z3 4.12.2 AnyCPU managed binding and per-RID native libraries used by the V# compiler. The binaries are the official Z3 4.12.2 release (MIT, copyright Microsoft Corporation); linux-arm64 and win-arm64 are built from that tag because the release has no official archive for them. This package is produced by build/fetch-z3.sh and is not published.</description>
+    <copyright>Copyright (c) Microsoft Corporation</copyright>
+    <tags>z3 smt native</tags>
+    <dependencies>
+      <group targetFramework="netstandard2.0" />
+    </dependencies>
+  </metadata>
+</package>

@@ -1,0 +1,8 @@
+# Version manifest. build/package.sh writes the filled set under artifacts/winget/.
+# microsoft/winget-pkgs wants this file plus the locale and installer manifests.
+# Submit those three after `winget validate`. The zip is unsigned.
+PackageIdentifier: VSharp.vsharpc
+PackageVersion: 0.1.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

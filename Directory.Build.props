@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <Version Condition="'$(Version)' == ''">0.1.0</Version>
+    <Authors>VSharp</Authors>
+    <Company>VSharp</Company>
+    <Product>V#</Product>
+    <Description>V# compiler. Proves function contracts and emits .NET IL.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/bluechiperic/vsharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/bluechiperic/vsharp</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

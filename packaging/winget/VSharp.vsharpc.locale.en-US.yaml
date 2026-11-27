@@ -1,0 +1,10 @@
+PackageIdentifier: VSharp.vsharpc
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: VSharp
+PackageName: vsharpc
+License: Apache-2.0
+ShortDescription: V# compiler that proves function contracts and emits .NET IL
+PackageUrl: https://github.com/bluechiperic/vsharp
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

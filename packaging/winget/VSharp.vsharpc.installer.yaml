@@ -1,0 +1,14 @@
+# x64 only. The win-arm64 archive has no libz3 and cannot verify.
+PackageIdentifier: VSharp.vsharpc
+PackageVersion: 0.1.0
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: vsharpc-0.1.0-win-x64\vsharpc.exe
+        PortableCommandAlias: vsharpc
+    InstallerUrl: https://github.com/bluechiperic/vsharp/releases/download/v0.1.0/vsharpc-0.1.0-win-x64.zip
+    InstallerSha256: REPLACE_WITH_SHA256
+ManifestType: installer
+ManifestVersion: 1.6.0

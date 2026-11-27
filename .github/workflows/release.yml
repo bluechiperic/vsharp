@@ -154,6 +154,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
       - uses: actions/setup-dotnet@v4
         with:
@@ -166,6 +168,10 @@ jobs:
       - name: Checksums
         run: |
           cd dist
+          # The release action uploads each file by its basename. Flatten so SHA256SUMS
+          # names the asset a download actually has.
+          find . -mindepth 2 -type f -exec mv -t . {} +
+          find . -mindepth 1 -type d -empty -delete
           rm -f SHA256SUMS
           find . -type f ! -name SHA256SUMS | sort | while IFS= read -r f; do
             f=${f#./}
@@ -173,14 +179,12 @@ jobs:
           done
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/**
+          files: dist/*
           generate_release_notes: true
           body: |
             Self-contained `vsharpc` builds for Windows, macOS, and Linux, plus a `dotnet tool` package.
             Install steps are in the repository README. `SHA256SUMS` covers every file.
             Packages are not signed. Authenticode, notarization, a Homebrew tap, winget, and nuget.org are maintainer follow-ups; the workflow comments mark where each one plugs in.
       - name: Push dotnet tool to nuget.org (optional)
-        if: ${{ secrets.NUGET_API_KEY != '' }}
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push "dist/vsharpc.*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        if: env.NUGET_API_KEY != ''
+        run: dotnet nuget push dist/vsharpc.*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

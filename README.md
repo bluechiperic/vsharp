@@ -90,6 +90,12 @@ dotnet run --project src/VSharp.Compiler -- check examples/bank.vs --json
 dotnet run --project src/VSharp.Compiler -- sig samples/business.vs
 ```
 
+On Linux ARM64 the official archives have no `libz3.so` for the host. Build that library from the `z3-4.12.2` tag first. That needs `g++-aarch64-linux-gnu`, `cmake`, `patchelf`, and `git`:
+
+```
+./build/fetch-z3.sh --build-linux-arm64
+```
+
 `check` parses, type-checks, and verifies. `build` writes `<Module>.dll` and refuses to emit it when any obligation fails. `run` builds, then runs `main`. Tests are `dotnet test VSharp.sln`. On Windows, `build/package.ps1` is the same entry as `build/package.sh` and needs Git Bash.
 
 ## Install
@@ -104,7 +110,7 @@ Unzip `vsharpc-<version>-win-x64.zip` and add that folder to `PATH`. The MSI nex
 
 `vsharpc-<version>-win-arm64.zip` is the same compiler built for ARM64, without `libz3.dll`. Z3 4.12.2 does not publish a Windows ARM64 binary, and that tag does not build with the current mingw-clang toolchain. `fmt`, `sig`, and `explain` run natively. Verification does not. On a Windows ARM machine, install the `win-x64` package to verify; Windows runs it under emulation. `NOTICE.txt` in the arm64 archive says the same thing.
 
-`artifacts/winget/VSharp.vsharpc.yaml` is a winget manifest for the zips. Submitting it means a pull request to `microsoft/winget-pkgs`, which is a separate repository, and winget often rejects an unsigned installer.
+`artifacts/winget/` is the three manifests `microsoft/winget-pkgs` accepts (version, default locale, and installer). They cover the x64 zip only. `winget install --manifest artifacts/winget` installs that set locally. Submitting them is a pull request to that separate repository, and winget often rejects an unsigned installer.
 
 ### macOS
 
@@ -112,6 +118,7 @@ Apple Silicon uses `osx-arm64`. Intel uses `osx-x64`. Both need macOS 11 or newe
 
 ```
 tar -xzf vsharpc-<version>-osx-arm64.tar.gz
+sudo mkdir -p /usr/local/lib /usr/local/bin
 sudo cp -a vsharpc-<version>-osx-arm64 /usr/local/lib/vsharpc
 sudo ln -sf /usr/local/lib/vsharpc/vsharpc /usr/local/bin/vsharpc
 ```

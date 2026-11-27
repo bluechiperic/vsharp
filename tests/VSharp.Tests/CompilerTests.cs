@@ -95,7 +95,7 @@ public class CompilerTests
         """)]
     public void Sample_verifies_compiles_to_il_and_runs(string sample, string expectedOutput)
     {
-        Check.Equal(expectedOutput, Run(Build(sample)));
+        Check.Equal(expectedOutput.Replace("\r\n", "\n").Replace("\r", "\n"), Run(Build(sample)));
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class CompilerTests
     public void Incorrect_program_is_rejected_with_the_expected_codes(string file)
     {
         var (result, source) = Compile(Path.Combine("tests", "cases", "fail", file));
-        var expected = Regex.Match(source, @"// expect: (.*)").Groups[1].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries).Order();
+        var expected = Regex.Match(source, @"// expect: ([^\r\n]*)").Groups[1].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries).Order();
         Check.Equal(expected, result.Diagnostics.Select(d => d.Code).Distinct().Order());
     }
 

@@ -80,16 +80,79 @@ The syntax has one way to say each thing, chosen so a model has fewer silent mis
 
 ## Build and run
 
-The compiler targets the .NET 10 SDK.
+The compiler targets the .NET 10 SDK. Verification links Z3 4.12.2. The `Microsoft.Z3` package on NuGet ships an x64-only managed assembly and no Linux native, so `build/fetch-z3.sh` downloads the official release archives, keeps the AnyCPU binding, and packs them into a local feed the solution restores.
 
 ```
+./build/fetch-z3.sh
 dotnet build
 dotnet run --project src/VSharp.Compiler -- run samples/exceptions.vs
 dotnet run --project src/VSharp.Compiler -- check examples/bank.vs --json
 dotnet run --project src/VSharp.Compiler -- sig samples/business.vs
 ```
 
-`check` parses, type-checks, and verifies. `build` writes `<Module>.dll` and refuses to emit it when any obligation fails. `run` builds, then runs `main`. Tests are `dotnet test VSharp.sln`.
+`check` parses, type-checks, and verifies. `build` writes `<Module>.dll` and refuses to emit it when any obligation fails. `run` builds, then runs `main`. Tests are `dotnet test VSharp.sln`. On Windows, `build/package.ps1` is the same entry as `build/package.sh` and needs Git Bash.
+
+## Install
+
+A release build is self-contained. It contains `vsharpc` and the Z3 4.12.2 native library for that machine, and it does not need a .NET install. Archives and `SHA256SUMS` are attached to the GitHub release. Nothing is signed: Windows SmartScreen and macOS Gatekeeper warn until the maintainer adds a certificate. Compare the file to `SHA256SUMS` before running it.
+
+`./build/package.sh` (or `build/package.ps1` on Windows) rebuilds every archive into `artifacts/`. `linux-arm64` is the one native the 4.12.2 release does not publish; building it wants `g++-aarch64-linux-gnu`.
+
+### Windows
+
+Unzip `vsharpc-<version>-win-x64.zip` and add that folder to `PATH`. The MSI next to the zip installs the same files under `%LOCALAPPDATA%\vsharpc`; add that directory to `PATH` as well. WiX links the Windows Installer library, so the MSI is built on Windows rather than from a Linux package run. `libz3.dll` is the official Z3 build. The Visual C++ DLLs it imports (`vcruntime140.dll`, `msvcp140.dll`, and the rest of that set) are in the folder, taken from the official Z3 archive. Windows 10 or newer supplies the Universal CRT.
+
+`vsharpc-<version>-win-arm64.zip` is the same compiler built for ARM64, without `libz3.dll`. Z3 4.12.2 does not publish a Windows ARM64 binary, and that tag does not build with the current mingw-clang toolchain. `fmt`, `sig`, and `explain` run natively. Verification does not. On a Windows ARM machine, install the `win-x64` package to verify; Windows runs it under emulation. `NOTICE.txt` in the arm64 archive says the same thing.
+
+`artifacts/winget/VSharp.vsharpc.yaml` is a winget manifest for the zips. Submitting it means a pull request to `microsoft/winget-pkgs`, which is a separate repository, and winget often rejects an unsigned installer.
+
+### macOS
+
+Apple Silicon uses `osx-arm64`. Intel uses `osx-x64`. Both need macOS 11 or newer. `libz3.dylib` links only `libSystem` and `libc++`.
+
+```
+tar -xzf vsharpc-<version>-osx-arm64.tar.gz
+sudo cp -a vsharpc-<version>-osx-arm64 /usr/local/lib/vsharpc
+sudo ln -sf /usr/local/lib/vsharpc/vsharpc /usr/local/bin/vsharpc
+```
+
+The `.pkg` beside the tarball installs that same tree. It is not notarized.
+
+`artifacts/homebrew/vsharpc.rb` is a formula filled in with the checksums from the build. It installs the release tarballs on macOS and Linux. Publishing it means a Homebrew tap the maintainer owns, for example `github.com/bluechiperic/homebrew-vsharp`, which this repository does not create.
+
+### Linux
+
+```
+tar -xzf vsharpc-<version>-linux-x64.tar.gz
+sudo cp -a vsharpc-<version>-linux-x64 /usr/lib/vsharpc
+sudo ln -sf /usr/lib/vsharpc/vsharpc /usr/bin/vsharpc
+```
+
+`linux-x64` is Z3's official glibc 2.31 build: glibc 2.29 or newer and `libstdc++6` (Debian 11 or Ubuntu 20.04, or newer). `linux-arm64` is compiled from the same tag with Ubuntu 24.04's aarch64 cross compiler and a static libstdc++. That binary needs glibc 2.38 or newer (Ubuntu 24.04 or Debian 13). `GLIBC.txt` in the tarball records the symbol, and the `.deb` depends on it.
+
+```
+sudo apt install ./vsharpc_<version>_amd64.deb
+sudo dnf install ./vsharpc-<version>-1.x86_64.rpm
+```
+
+Use `arm64` / `aarch64` on AArch64. The packages install `/usr/bin/vsharpc`.
+
+### .NET tool
+
+With the .NET 10 SDK already installed, the framework-dependent package in the release works without a self-contained unzip:
+
+```
+dotnet tool install -g vsharpc --source <folder that contains vsharpc.<version>.nupkg>
+```
+
+The workflow pushes that nupkg to nuget.org only when `NUGET_API_KEY` is set. It is not set in this repository.
+
+### Check
+
+```
+vsharpc explain TN3001
+vsharpc check samples/search.vs
+```
 
 ## Read next
 

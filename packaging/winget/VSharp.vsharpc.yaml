@@ -1,0 +1,30 @@
+# Template. build/package.sh writes artifacts/winget/VSharp.vsharpc.yaml with checksums.
+# Submit the generated file to microsoft/winget-pkgs (a separate repository) after
+# `winget validate`. Unsigned zips are often rejected; Authenticode is the maintainer's step.
+PackageIdentifier: VSharp.vsharpc
+PackageVersion: 0.1.0
+PackageLocale: en-US
+Publisher: VSharp
+PackageName: vsharpc
+License: Apache-2.0
+ShortDescription: V# compiler that proves function contracts and emits .NET IL
+PackageUrl: https://github.com/bluechiperic/vsharp
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: vsharpc-0.1.0-win-x64\vsharpc.exe
+        PortableCommandAlias: vsharpc
+    InstallerUrl: https://github.com/bluechiperic/vsharp/releases/download/v0.1.0/vsharpc-0.1.0-win-x64.zip
+    InstallerSha256: REPLACE_WITH_SHA256
+  - Architecture: arm64
+    InstallerType: zip
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: vsharpc-0.1.0-win-arm64\vsharpc.exe
+        PortableCommandAlias: vsharpc
+    InstallerUrl: https://github.com/bluechiperic/vsharp/releases/download/v0.1.0/vsharpc-0.1.0-win-arm64.zip
+    InstallerSha256: REPLACE_WITH_SHA256
+ManifestType: singleton
+ManifestVersion: 1.6.0

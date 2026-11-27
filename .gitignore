@@ -11,3 +11,9 @@ TestResults/
 
 # Compares the V# port with verbatim private ScheduleAPI sources. Kept local only.
 tests/Scheduling.Equivalence/
+
+# Packaging output and the local Z3 feed (build/fetch-z3.sh).
+artifacts/
+build/.cache/
+build/.tools/
+build/nugets/

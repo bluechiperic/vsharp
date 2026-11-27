@@ -1,0 +1,20 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!--
+    Per-user install of one self-contained RID. build/package.sh passes Version (x.y.z.0)
+    and PublishDir. PATH is not modified: add %LOCALAPPDATA%\vsharpc to PATH, or use the zip.
+    Authenticode signing is intentionally not invoked here.
+  -->
+  <Package Name="vsharpc"
+           Manufacturer="VSharp"
+           Version="$(var.Version)"
+           UpgradeCode="8f3c1e2a-6b4d-4f1a-9c2e-7a1b5d0e4c33"
+           Scope="perUser">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of vsharpc is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="vsharpc">
+        <Files Include="$(var.PublishDir)\**" />
+      </Directory>
+    </StandardDirectory>
+  </Package>
+</Wix>

@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V# for C# developers: a primer on verified .NET code</title>
+<meta name="description" content="An introduction to V#, a .NET language whose compiler proves code correct against its contracts, written for C# developers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2F3EF;
+    --paper-2: #E7E9E2;
+    --ink: #18202B;
+    --muted: #5B6575;
+    --rule: #D2D6CB;
+    --slate: #1C2330;
+    --slate-2: #262F3F;
+    --slate-ink: #D9DFE8;
+    --slate-muted: #8F9AAC;
+    --proved: #1F7A57;
+    --proved-lit: #3DBA88;
+    --refuted: #C23A2B;
+    --refuted-lit: #F0705F;
+    --claim: #3A3F9E;
+    --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    --measure: 68ch;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 1.125rem/1.65 var(--serif);
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration-color: var(--claim); text-underline-offset: 3px; }
+  a:hover { color: var(--claim); }
+  :focus-visible { outline: 3px solid var(--claim); outline-offset: 3px; border-radius: 2px; }
+  code, pre, kbd { font-family: var(--mono); font-size: 0.84em; }
+  code, pre, kbd, .verdict, .tests, .wordmark { font-variant-ligatures: none !important; }
+  p code, li code, td code, dd code, figcaption code {
+    background: var(--paper-2); padding: 0.08em 0.32em; border-radius: 3px; white-space: nowrap;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    max-width: 1180px; margin: 0 auto; padding: 72px 28px 56px;
+    display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: start;
+  }
+  .wordmark { font: 600 1rem/1 var(--mono); letter-spacing: 0.02em; color: var(--muted); margin: 0 0 40px; }
+  .wordmark b { color: var(--ink); }
+  h1 {
+    font-weight: 600; font-size: clamp(2.5rem, 5.2vw, 4.3rem); line-height: 1.02;
+    letter-spacing: -0.025em; margin: 0 0 28px; font-variation-settings: "opsz" 60;
+  }
+  .lede { font-size: 1.25rem; line-height: 1.55; max-width: 34ch; margin: 0 0 20px; }
+  .lede + p { color: var(--muted); max-width: 40ch; margin: 0; }
+
+  .bench { display: grid; gap: 14px; }
+  .bench-label { font-size: 0.95rem; color: var(--muted); margin: 0 0 6px; }
+  .tests {
+    margin: 0; padding: 10px 14px; background: var(--paper-2); border-radius: 6px;
+    font: 0.8rem/1.6 var(--mono); list-style: none;
+  }
+  .tests li::before { content: "\2713"; color: var(--proved); font-weight: 600; margin-right: 10px; }
+  .tests .sum { color: var(--proved); font-weight: 600; margin-top: 4px; }
+  .tests .sum::before { content: none; }
+  .ask {
+    justify-self: start; font: 600 1rem/1 var(--serif); color: var(--paper); background: var(--ink);
+    border: 0; border-radius: 6px; padding: 14px 20px; cursor: pointer;
+  }
+  .ask:hover { background: var(--claim); }
+  .ask[disabled] { background: var(--muted); cursor: default; }
+  .hero-verdict[hidden] { display: none; }
+  .hero-verdict .v-cx dt, .hero-verdict .v-cx dd { opacity: 1; transform: none; transition: opacity .35s ease, transform .35s ease; }
+  .hero-verdict.pending .v-cx dt, .hero-verdict.pending .v-cx dd { opacity: 0; transform: translateY(4px); }
+  .hero-note { font-size: 1.05rem; margin: 4px 0 0; }
+  .hero-note[hidden] { display: none; }
+
+  /* ---------- page grid ---------- */
+  .page {
+    max-width: 1180px; margin: 0 auto; padding: 0 28px 120px;
+    display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 64px;
+    border-top: 1px solid var(--rule);
+  }
+  nav.toc { position: sticky; top: 0; align-self: start; padding-top: 48px; max-height: 100vh; overflow-y: auto; }
+  nav.toc p { font-size: 0.9rem; color: var(--muted); margin: 0 0 12px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; font-size: 0.95rem; line-height: 1.35; }
+  nav.toc li { margin: 0 0 10px; }
+  nav.toc a { text-decoration: none; color: var(--muted); display: block; padding-left: 12px; border-left: 2px solid transparent; }
+  nav.toc a:hover { color: var(--ink); }
+  nav.toc a.current { color: var(--ink); border-left-color: var(--claim); }
+  article { padding-top: 48px; min-width: 0; }
+  article > section { margin-bottom: 88px; }
+  article p, article ul, article ol, article h2, article h3 { max-width: var(--measure); }
+  h2 {
+    font-weight: 600; font-size: 2.15rem; line-height: 1.12; letter-spacing: -0.015em;
+    margin: 0 0 20px; font-variation-settings: "opsz" 48;
+  }
+  h2 .ch { color: var(--muted); font-weight: 400; margin-right: 14px; font-variant-numeric: tabular-nums; }
+  h3 { font-weight: 600; font-size: 1.35rem; line-height: 1.25; margin: 48px 0 12px; }
+  p { margin: 0 0 18px; }
+  ul, ol { padding-left: 1.25em; margin: 0 0 18px; }
+  li { margin: 0 0 8px; }
+  .aside {
+    max-width: var(--measure); border-left: 3px solid var(--claim); padding: 2px 0 2px 18px;
+    margin: 24px 0; color: var(--ink);
+  }
+  .aside p:last-child { margin-bottom: 0; }
+
+  /* ---------- code ---------- */
+  figure { margin: 24px 0 28px; max-width: 900px; }
+  figcaption { font-size: 0.92rem; color: var(--muted); margin: 0 0 8px; }
+  pre.code {
+    margin: 0; padding: 16px 18px; background: var(--paper-2); border-radius: 6px;
+    overflow-x: auto; line-height: 1.6; tab-size: 2; color: var(--ink);
+  }
+  pre.code .ln { display: block; margin: 0 -18px; padding: 0 18px; border-left: 3px solid transparent; }
+  pre.code .ln.bad { background: rgba(194, 58, 43, 0.10); border-left-color: var(--refuted); }
+  pre.code .ln.good { background: rgba(31, 122, 87, 0.10); border-left-color: var(--proved); }
+  .k { font-weight: 600; }
+  .c { color: var(--claim); font-weight: 600; }
+  .s { color: #8A4A12; }
+  .n { color: #96306A; }
+  .cm { color: #737C8A; font-style: italic; }
+  .t { color: #24577F; }
+  .h { color: var(--refuted); font-weight: 600; }
+
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; max-width: 900px; margin: 24px 0 28px; }
+  .pair figure { margin: 0; }
+
+  /* ---------- verdicts: what the compiler said ---------- */
+  .verdict {
+    background: var(--slate); color: var(--slate-ink); border-radius: 6px; padding: 16px 18px;
+    font: 0.84rem/1.55 var(--mono); max-width: 900px; margin: 0 0 28px; overflow-x: auto;
+    border-left: 4px solid var(--refuted-lit);
+  }
+  .verdict.proved { border-left-color: var(--proved-lit); }
+  figure .verdict { margin-bottom: 0; }
+  .v-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: baseline; }
+  .v-badge { font-weight: 600; color: var(--refuted-lit); }
+  .proved .v-badge { color: var(--proved-lit); }
+  .v-code { color: var(--slate-muted); }
+  .v-msg { flex: 1 1 320px; }
+  .v-where { color: var(--slate-muted); }
+  .v-cx {
+    display: grid; grid-template-columns: max-content 1fr; gap: 2px 20px; margin: 12px 0 0;
+    padding: 10px 14px; background: var(--slate-2); border-radius: 4px;
+  }
+  .v-cx div { display: contents; }
+  .v-cx dt { color: var(--slate-muted); }
+  .v-cx dd { margin: 0; color: #fff; font-weight: 600; }
+  .v-cx-label { color: var(--slate-muted); margin: 12px 0 0; }
+  .v-hint { color: var(--slate-muted); margin: 10px 0 0; font-family: var(--serif); font-size: 0.98rem; font-style: italic; }
+  pre.term { margin: 0; white-space: pre; color: var(--slate-ink); font: inherit; }
+
+  /* ---------- before / after toggle ---------- */
+  .flip { max-width: 900px; margin: 24px 0 28px; }
+  .flip-bar { display: inline-flex; gap: 4px; padding: 4px; background: var(--paper-2); border-radius: 8px; margin-bottom: 10px; }
+  .flip-bar button {
+    font: 600 0.95rem/1 var(--serif); color: var(--muted); background: transparent; border: 0;
+    padding: 9px 14px; border-radius: 5px; cursor: pointer;
+  }
+  .flip-bar button[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 0 var(--rule); }
+  .flip-pane figure { margin: 0 0 12px; }
+  .flip-pane .verdict { margin-bottom: 0; }
+
+  /* ---------- tables ---------- */
+  table { border-collapse: collapse; width: 100%; max-width: 900px; margin: 20px 0 28px; font-size: 1rem; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; font-size: 0.92rem; color: var(--muted); }
+  td code { white-space: normal; }
+
+  .steps { counter-reset: step; list-style: none; padding: 0; max-width: var(--measure); }
+  .steps li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 16px; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0.05em; width: 28px; height: 28px; border-radius: 50%;
+    border: 1.5px solid var(--ink); font: 600 0.85rem/25px var(--mono); text-align: center;
+  }
+
+  footer { max-width: 1180px; margin: 0 auto; padding: 32px 28px 64px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1060px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 48px; }
+    .lede, .lede + p { max-width: var(--measure); }
+    .page { grid-template-columns: 1fr; gap: 0; }
+    nav.toc { position: static; max-height: none; padding-top: 32px; }
+    nav.toc ol { columns: 2; column-gap: 32px; }
+  }
+  @media (max-width: 720px) {
+    body { font-size: 1.05rem; }
+    .pair { grid-template-columns: 1fr; }
+    nav.toc ol { columns: 1; }
+    h2 { font-size: 1.75rem; }
+    pre.term { white-space: pre-wrap; overflow-wrap: anywhere; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-verdict .v-cx dt, .hero-verdict .v-cx dd { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <p class="wordmark"><b>V#</b> for C# developers</p>
+    <h1>Your tests try the inputs you thought of. V# tries all of them.</h1>
+    <p class="lede">V# is a .NET language whose compiler proves that each function keeps its contract, for every possible input, before it emits any IL. When it can't, it hands you the input that breaks it.</p>
+    <p>This primer maps what you already know from C# onto V#, then spends most of its time on the part C# doesn't have: verification.</p>
+  </div>
+
+  <div class="bench" aria-live="polite">
+    <div>
+      <p class="bench-label">A pricing helper in C#, with the tests a careful reviewer would ask for.</p>
+      <pre class="code" data-lang="cs">public static decimal Discounted(decimal price, decimal percent)
+    =&gt; price - price * percent / 100m;
+
+[Theory]
+[InlineData(100, 10, 90)]
+[InlineData(80, 25, 60)]
+[InlineData(20, 0, 20)]
+public void Applies_discount(int price, int pct, int expected) =&gt;
+    Assert.Equal(expected, Pricing.Discounted(price, pct));</pre>
+    </div>
+    <ul class="tests">
+      <li>Applies_discount(price: 100, pct: 10, expected: 90)</li>
+      <li>Applies_discount(price: 80, pct: 25, expected: 60)</li>
+      <li>Applies_discount(price: 20, pct: 0, expected: 20)</li>
+      <li class="sum">3 passed</li>
+    </ul>
+    <div>
+      <p class="bench-label">The same function in V#. The <span class="c">ensures</span> line states what "a discount" means: never negative, never more than the price.</p>
+      <pre class="code" data-lang="tn" id="hero-code">fn discounted(price: Decimal, percent: Decimal) -&gt; Decimal
+  requires price &gt;= 0m
+  ensures 0m &lt;= result &amp;&amp; result &lt;= price
+{
+  return price - price * percent / 100m
+}</pre>
+    </div>
+    <button class="ask" type="button" id="ask">Run the verifier</button>
+    <div class="verdict hero-verdict pending" id="hero-verdict" hidden>
+      <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3001</span>
+        <span class="v-msg">postcondition of 'discounted' might not hold: 0m &lt;= result &amp;&amp; result &lt;= price</span></div>
+      <p class="v-cx-label">counterexample</p>
+      <dl class="v-cx">
+        <div><dt>price</dt><dd>1m</dd></div>
+        <div><dt>percent</dt><dd>101m</dd></div>
+        <div><dt>result</dt><dd>-0.01m</dd></div>
+      </dl>
+    </div>
+    <p class="hero-note" id="hero-note" hidden>A 101% coupon makes the price negative. None of the three tests asked about it. The verifier wasn't running examples: it was searching for any input that breaks the <span class="c">ensures</span> line, and it found one.</p>
+  </div>
+</header>
+
+<div class="page">
+  <nav class="toc" aria-label="Contents">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#what">What V# is</a></li>
+      <li><a href="#translate">Reading V# as a C# developer</a></li>
+      <li><a href="#contracts">Contracts</a></li>
+      <li><a href="#refinements">Refinement types</a></li>
+      <li><a href="#loops">Loops and termination</a></li>
+      <li><a href="#free">Checks you get for free</a></li>
+      <li><a href="#classes">Classes and interfaces</a></li>
+      <li><a href="#exceptions">Exceptions as contracts</a></li>
+      <li><a href="#how">How the proof works</a></li>
+      <li><a href="#interop">Calling V# from C#</a></li>
+      <li><a href="#ai">Writing V# with an AI</a></li>
+      <li><a href="#fit">Where it fits</a></li>
+      <li><a href="#start">Try it</a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+    <section id="what">
+      <h2><span class="ch">1</span>What V# is</h2>
+      <p>V# compiles to IL, like C#. A V# module becomes an ordinary assembly, <code>Pricing.dll</code>, that a C# project references and calls like any other library. Records become sealed classes with properties, interfaces become CLR interfaces, and <code>async</code> functions return <code>Task&lt;T&gt;</code>.</p>
+      <p>What's different is the compiler's job. Next to its signature, each V# function carries a <em>contract</em>: what it requires from callers and what it promises in return. Before generating code, <code>vsharpc</code> turns every promise, every array index, every division and every loop into a logical question, and asks the Z3 solver to find an input that breaks it. When no such input exists, the obligation is proved. When one does, compilation stops and you get that input as a counterexample.</p>
+      <p>Nothing unproved compiles. A <code>Pricing.dll</code> that exists has met every one of its contracts for every input.</p>
+      <div class="aside">
+        <p>V# is meant for the decision-making core of an application: pricing, eligibility, scheduling rules, authorization limits, moving money. The C# around it keeps doing what C# does well: controllers, data access, logging, dependency injection.</p>
+      </div>
+    </section>
+
+    <section id="translate">
+      <h2><span class="ch">2</span>Reading V# as a C# developer</h2>
+      <p>Most of V# maps directly onto C# you already write. Here are the common constructs side by side:</p>
+      <table>
+        <thead><tr><th>C#</th><th>V#</th></tr></thead>
+        <tbody>
+          <tr><td><code>public static class Pricing</code></td><td><code>module Pricing</code></td></tr>
+          <tr><td><code>public static decimal F(decimal x)</code></td><td><code>fn f(x: Decimal) -&gt; Decimal</code></td></tr>
+          <tr><td><code>long</code>, <code>int</code>, <code>decimal</code>, <code>string</code>, <code>DateOnly</code>, <code>T[]</code></td><td><code>Int</code>, <code>Int32</code>, <code>Decimal</code>, <code>String</code>, <code>Date</code>, <code>Array[T]</code></td></tr>
+          <tr><td>A local you never reassign</td><td><code>let total = a + b</code></td></tr>
+          <tr><td><code>var i = 0; i = i + 1;</code></td><td><code>var i = 0</code> then <code>set i = i + 1</code></td></tr>
+          <tr><td><code>public sealed record Point(long X, long Y)</code></td><td><code>type Point = { x: Int, y: Int }</code></td></tr>
+          <tr><td>An abstract record with sealed subclasses, and a <code>switch</code> expression</td><td><code>type Quote = | Flat(cents: Int) | PerKilo(cents: Int, kilos: Int)</code> and <code>match</code></td></tr>
+          <tr><td><code>T?</code> and null checks</td><td><code>Option[T]</code>: <code>Some(v)</code> or <code>None</code></td></tr>
+          <tr><td>Throwing for an expected failure</td><td><code>Result[T, E]</code>, or <code>throws E when cond</code> in the contract</td></tr>
+          <tr><td><code>p with { X = 3 }</code></td><td><code>p with { x: 3 }</code></td></tr>
+          <tr><td><code>xs.Where(x =&gt; x &gt; 10).Select(...)</code></td><td><code>map(filter(xs, x =&gt; x &gt; 10), ...)</code></td></tr>
+          <tr><td><code>async Task&lt;T&gt;</code> and <code>await</code></td><td><code>effects async</code>, and <code>let v = await f(...)</code></td></tr>
+          <tr><td><code>Debug.Assert(cond)</code></td><td><code>assert cond</code>, proved at compile time and then erased</td></tr>
+        </tbody>
+      </table>
+
+      <p>A small but complete module reads like this:</p>
+      <figure>
+        <figcaption>A shipping module with a refined type, a record, a union and a <code>match</code>. It verifies as written.</figcaption>
+        <pre class="code" data-lang="tn">module Shipping
+
+type Weight = Int where self &gt; 0
+
+type Parcel = { id: Int, grams: Weight }
+
+type Quote = | Flat(cents: Int) | PerKilo(cents: Int, kilos: Int)
+
+fn kilos(grams: Weight) -&gt; Int
+  ensures result &gt;= 1
+{
+  return (grams + 999) / 1000
+}
+
+fn quote(p: Parcel) -&gt; Quote
+  ensures match result { Flat(c) =&gt; c == 499, PerKilo(c, k) =&gt; c == 350 * k &amp;&amp; k &gt;= 2 }
+{
+  let k = kilos(p.grams)
+  if k == 1 { return Flat(499) }
+  return PerKilo(cents: 350 * k, kilos: k)
+}</pre>
+      </figure>
+
+      <h3>The rules that will feel strange</h3>
+      <p>Each of these exists so that the program you read is exactly the program that gets proved.</p>
+      <ul>
+        <li><strong>Every statement starts with a keyword</strong>: <code>let</code>, <code>var</code>, <code>set</code>, <code>if</code>, <code>for</code>, <code>while</code>, <code>match</code>, <code>return</code>, <code>do</code>, <code>assert</code>. There are no semicolons, and a malformed line can't swallow its neighbours. Assignment is <code>set x = e</code>, so <code>=</code> is never confused with <code>==</code>.</li>
+        <li><strong>Names are unique within a function.</strong> There's no shadowing, so a name means one thing everywhere in the function.</li>
+        <li><strong>Named arguments are required when two parameters share a type.</strong> <code>discounted(price: p, percent: c)</code> can't be written with the arguments swapped.</li>
+        <li><strong>Values are immutable.</strong> Records, arrays, classes and unions never change after construction; only local <code>var</code>s do. With no aliasing, the verifier never has to wonder who else changed your data.</li>
+        <li><strong>There's no null.</strong> Absence is <code>Option</code>, and every <code>match</code> must handle every case.</li>
+        <li><strong>Side effects are declared.</strong> A function that prints says <code>effects io</code>; one that awaits says <code>effects async</code>. Without effects, a function is pure and can appear inside contracts.</li>
+        <li><strong>Everything terminates.</strong> <code>for</code> loops are bounded, and each <code>while</code> loop and recursive function states a measure that shrinks.</li>
+      </ul>
+    </section>
+
+    <section id="contracts">
+      <h2><span class="ch">3</span>Contracts: requires and ensures</h2>
+      <p>A contract has two sides. <span class="c">requires</span> is what the caller must guarantee. <span class="c">ensures</span> is what the function guarantees back, with <code>result</code> naming the return value. Unlike a guard clause or <code>Debug.Assert</code>, neither is checked against the inputs that happen to arrive at run time. Both are proved for all inputs at compile time.</p>
+      <p>Back to the discount from the top of the page. The counterexample said a percentage over 100 breaks the promise. The fix isn't in the arithmetic. The function needs a precondition saying which percentages make sense:</p>
+
+      <div class="flip" data-flip>
+        <div class="flip-bar" role="tablist" aria-label="Discount versions">
+          <button role="tab" aria-selected="true">As written</button>
+          <button role="tab" aria-selected="false">With a precondition</button>
+        </div>
+        <div class="flip-pane" role="tabpanel">
+          <figure><pre class="code" data-lang="tn" data-bad="5">fn discounted(price: Decimal, percent: Decimal) -&gt; Decimal
+  requires price &gt;= 0m
+  ensures 0m &lt;= result &amp;&amp; result &lt;= price
+{
+  return price - price * percent / 100m
+}</pre></figure>
+          <div class="verdict">
+            <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3001</span><span class="v-msg">postcondition of 'discounted' might not hold: 0m &lt;= result &amp;&amp; result &lt;= price</span></div>
+            <dl class="v-cx"><div><dt>price</dt><dd>1m</dd></div><div><dt>percent</dt><dd>101m</dd></div><div><dt>result</dt><dd>-0.01m</dd></div></dl>
+            <p class="v-hint">Either the code returns a wrong value on this path, or the 'ensures' clause is too strong. The counterexample gives concrete inputs.</p>
+          </div>
+        </div>
+        <div class="flip-pane" role="tabpanel" hidden>
+          <figure><pre class="code" data-lang="tn" data-good="3">fn discounted(price: Decimal, percent: Decimal) -&gt; Decimal
+  requires price &gt;= 0m
+  requires 0m &lt;= percent &amp;&amp; percent &lt;= 100m
+  ensures 0m &lt;= result &amp;&amp; result &lt;= price
+{
+  return price - price * percent / 100m
+}</pre></figure>
+          <div class="verdict proved"><div class="v-head"><span class="v-badge">Verified</span><span class="v-msg">ok: verified (3 proof obligations discharged)</span></div></div>
+        </div>
+      </div>
+
+      <h3>The obligation moves to the caller</h3>
+      <p>Now <code>discounted</code> is proved, but its precondition has become someone else's problem. A checkout function that passes a raw coupon value straight through is rejected at the call site:</p>
+      <figure>
+        <pre class="code" data-lang="tn" data-bad="4">fn checkout(subtotal: Decimal, coupon: Decimal) -&gt; Decimal
+  requires subtotal &gt;= 0m
+{
+  return discounted(price: subtotal, percent: coupon)
+}</pre>
+      </figure>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3002</span><span class="v-msg">precondition of 'discounted' might not hold: 0m &lt;= percent &amp;&amp; percent &lt;= 100m</span></div>
+        <dl class="v-cx"><div><dt>subtotal</dt><dd>0m</dd></div><div><dt>coupon</dt><dd>101m</dd></div></dl>
+        <p class="v-hint">The caller must establish every 'requires' clause of 'discounted' before the call.</p>
+      </div>
+      <p>The caller has two options: guard the call, or push the requirement further up with its own <span class="c">requires</span>. Here a guard makes sense, and the caller states its own promise:</p>
+      <figure>
+        <pre class="code" data-lang="tn">fn checkout(subtotal: Decimal, coupon: Decimal) -&gt; Decimal
+  requires subtotal &gt;= 0m
+  ensures 0m &lt;= result &amp;&amp; result &lt;= subtotal
+{
+  if coupon &lt; 0m || coupon &gt; 100m { return subtotal }
+  return discounted(price: subtotal, percent: coupon)
+}</pre>
+      </figure>
+      <div class="verdict proved"><div class="v-head"><span class="v-badge">Verified</span><span class="v-msg">ok: verified (10 proof obligations discharged) -&gt; out\Pricing.dll</span></div></div>
+
+      <p>This is the everyday rhythm of writing V#, and the reason edits stay local. Each function is checked only against the <em>contracts</em> of what it calls, never their bodies. Change the body of <code>discounted</code> and only <code>discounted</code> is re-proved. Change its contract and the compiler lists exactly the call sites that no longer hold.</p>
+    </section>
+
+    <section id="refinements">
+      <h2><span class="ch">4</span>Refinement types</h2>
+      <p>A refinement type is a base type plus a rule that every value must satisfy: <code>type Weight = Int where self &gt; 0</code>. At run time it's just a <code>long</code>. At compile time the verifier proves the rule wherever a value flows <em>into</em> the type (an argument, a field, a return), and assumes it wherever one is read. You get the benefit of a validated value object without writing the class, the factory or the checks.</p>
+      <p>That assumption is what lets <code>kilos</code> be proved. Here is the version most people write first:</p>
+
+      <div class="flip" data-flip>
+        <div class="flip-bar" role="tablist" aria-label="kilos versions">
+          <button role="tab" aria-selected="true">As written</button>
+          <button role="tab" aria-selected="false">Rounding up</button>
+        </div>
+        <div class="flip-pane" role="tabpanel">
+          <figure><pre class="code" data-lang="tn" data-bad="5">fn kilos(grams: Weight) -&gt; Int
+  ensures result &gt;= 1
+  ensures result * 1000 &gt;= grams
+{
+  return grams / 1000
+}</pre></figure>
+          <div class="verdict">
+            <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3001</span><span class="v-msg">postcondition of 'kilos' might not hold: result &gt;= 1</span></div>
+            <dl class="v-cx"><div><dt>grams</dt><dd>1</dd></div><div><dt>result</dt><dd>0</dd></div></dl>
+            <div class="v-head" style="margin-top:16px"><span class="v-badge">Refuted</span><span class="v-code">TN3001</span><span class="v-msg">postcondition of 'kilos' might not hold: result * 1000 &gt;= grams</span></div>
+            <dl class="v-cx"><div><dt>grams</dt><dd>1</dd></div><div><dt>result</dt><dd>0</dd></div></dl>
+          </div>
+          <p style="margin-top:12px">A one-gram parcel would ship for free: integer division rounds down to zero kilos.</p>
+        </div>
+        <div class="flip-pane" role="tabpanel" hidden>
+          <figure><pre class="code" data-lang="tn" data-good="5">fn kilos(grams: Weight) -&gt; Int
+  ensures result &gt;= 1
+  ensures result * 1000 &gt;= grams
+{
+  return (grams + 999) / 1000
+}</pre></figure>
+          <div class="verdict proved"><div class="v-head"><span class="v-badge">Verified</span><span class="v-msg">ok: verified (3 proof obligations discharged)</span></div></div>
+          <p style="margin-top:12px">The proof of <code>result &gt;= 1</code> uses <code>grams &gt; 0</code>, which the <code>Weight</code> type guarantees. With a plain <code>Int</code> parameter, <code>grams = 0</code> would be the counterexample.</p>
+        </div>
+      </div>
+
+      <p>Refinements carry their rules into records too. In a banking example, <code>type Money = Int where self &gt;= 0</code> on every account balance means no code anywhere can build an account with a negative balance. The first draft of a transfer function was rejected because a negative amount runs the transfer backwards:</p>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3014</span><span class="v-msg">field 'balance' of 'Account' might not satisfy refinement type Money: self &gt;= 0</span></div>
+        <dl class="v-cx"><div><dt>src</dt><dd>(Account 0 0)</dd></div><div><dt>dst</dt><dd>(Account 0 0)</dd></div><div><dt>amount</dt><dd>-1</dd></div></dl>
+        <p class="v-hint">Every value of type Money must satisfy its 'where' clause.</p>
+      </div>
+      <p>The balance check <code>amount &gt; src.balance</code> passes because <code>-1 &gt; 0</code> is false, and the destination would end at -1. Declaring the parameter as <code>amount: Money</code> fixes it, and moves the obligation to every caller. The full walkthrough is in <a href="../examples/bank.md"><code>examples/bank.md</code></a>.</p>
+    </section>
+
+    <section id="loops">
+      <h2><span class="ch">5</span>Loops: invariants and termination</h2>
+      <p>The verifier can't run a loop for every possible number of iterations, so you state what stays true on each pass: a loop <span class="c">invariant</span>. The verifier proves it holds on entry and survives every iteration, then reasons about everything after the loop from the invariant alone. A <span class="c">decreases</span> measure, a non-negative number that shrinks on each pass, proves the loop ends.</p>
+      <p>Binary search is the classic place where everyone writes an off-by-one. Here's a version that verifies against a full specification: if it returns an index, the key is there, and if it returns -1, the key is nowhere in the array.</p>
+      <figure>
+        <pre class="code" data-lang="tn">fn binary_search(a: Array[Int], key: Int) -&gt; Int
+  requires forall i in 0..len(a) : forall j in i..len(a) : a[i] &lt;= a[j]
+  ensures -1 &lt;= result &amp;&amp; result &lt; len(a)
+  ensures result &gt;= 0 ==&gt; a[result] == key
+  ensures result &lt; 0 ==&gt; forall k in 0..len(a) : a[k] != key
+{
+  var lo = 0
+  var hi = len(a)
+  while lo &lt; hi
+    invariant 0 &lt;= lo &amp;&amp; lo &lt;= hi &amp;&amp; hi &lt;= len(a)
+    invariant forall k in 0..lo : a[k] &lt; key
+    invariant forall k in hi..len(a) : a[k] &gt; key
+    decreases hi - lo
+  {
+    let mid = lo + (hi - lo) / 2
+    if a[mid] &lt; key { set lo = mid + 1 }
+    else if a[mid] &gt; key { set hi = mid }
+    else { return mid }
+  }
+  return -1
+}</pre>
+      </figure>
+      <p>Change one character, writing <code>set hi = mid - 1</code> on the highlighted line, and the bounds no longer mean what the invariants say:</p>
+      <figure>
+        <pre class="code" data-lang="tn" data-bad="3">    let mid = lo + (hi - lo) / 2
+    if a[mid] &lt; key { set lo = mid + 1 }
+    else if a[mid] &gt; key { set hi = mid - 1 }
+    else { return mid }</pre>
+      </figure>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3005</span><span class="v-msg">loop invariant might not be maintained: 0 &lt;= lo &amp;&amp; lo &lt;= hi &amp;&amp; hi &lt;= len(a)</span></div>
+        <dl class="v-cx"><div><dt>a</dt><dd>[7720] (len 1)</dd></div><div><dt>key</dt><dd>7719</dd></div><div><dt>lo</dt><dd>0</dd></div><div><dt>hi</dt><dd>-1</dd></div><div><dt>mid</dt><dd>0</dd></div></dl>
+        <p class="v-hint">The invariant must hold again after every iteration. The counterexample shows values at the end of one iteration.</p>
+      </div>
+      <p>A one-element array whose element is larger than the key drives <code>hi</code> to -1. The same edit also breaks the third invariant, and that is the more dangerous bug: in a larger array, the element at <code>mid - 1</code> drops out of the search, so when it happens to be the key, the function returns -1. A test only catches that if it puts the key in exactly the right place.</p>
+
+      <h3>Termination</h3>
+      <p>Code that never returns is a bug that tests usually find as a hung build agent. V# rejects it at compile time:</p>
+      <div class="pair">
+        <figure>
+          <pre class="code" data-lang="tn" data-bad="9">fn spin(n: Int) -&gt; Int
+  requires n &gt;= 0
+{
+  var i = n
+  while i &gt; 0
+    invariant i &gt;= 0
+    decreases i
+  {
+    set i = i + 0
+  }
+  return i
+}</pre>
+        </figure>
+        <figure>
+          <pre class="code" data-lang="tn" data-bad="4">fn down(n: Int) -&gt; Int
+  decreases n
+{
+  return down(n - 1)
+}</pre>
+        </figure>
+      </div>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3008</span><span class="v-msg">loop might not terminate: 'i' does not decrease on every iteration while staying non-negative</span></div>
+        <dl class="v-cx"><div><dt>n</dt><dd>0</dd></div><div><dt>i</dt><dd>1</dd></div></dl>
+        <div class="v-head" style="margin-top:16px"><span class="v-badge">Refuted</span><span class="v-code">TN3008</span><span class="v-msg">recursion might not terminate: the 'decreases' measure of 'down' must be smaller on this call than 'n' here, and non-negative</span></div>
+        <dl class="v-cx"><div><dt>n</dt><dd>-1</dd></div></dl>
+      </div>
+      <p>Termination matters to more than build agents. A recursive function's contract is assumed at its own recursive calls, and that is only sound if the recursion ends. Without the check, <code>fn bad(x: Int) -&gt; Int ensures result == bad(x) + 1</code> would "prove" anything.</p>
+    </section>
+
+    <section id="free">
+      <h2><span class="ch">6</span>Checks you get without writing a contract</h2>
+      <p>Some obligations come with every function, with or without a contract. The verifier proves each of these, or shows the input that violates it:</p>
+      <table>
+        <thead><tr><th>Obligation</th><th>What C# does instead</th></tr></thead>
+        <tbody>
+          <tr><td>Every array index is in bounds</td><td><code>IndexOutOfRangeException</code> at run time</td></tr>
+          <tr><td>No division or remainder by zero</td><td><code>DivideByZeroException</code></td></tr>
+          <tr><td>Every <code>match</code> covers every case</td><td>A compiler warning, and <code>SwitchExpressionException</code></td></tr>
+          <tr><td>Every value meets its refinement type</td><td>Whatever validation you remembered to write</td></tr>
+          <tr><td>Every loop and recursion ends</td><td>A hang</td></tr>
+          <tr><td>Dates are valid and in range; <code>str_sub</code> stays in bounds</td><td><code>ArgumentOutOfRangeException</code></td></tr>
+          <tr><td>In <code>total</code> mode: no 64-bit overflow</td><td>Silent wraparound, or <code>OverflowException</code> in a <code>checked</code> block</td></tr>
+        </tbody>
+      </table>
+      <p>For example, finding the heaviest parcel looks harmless until the verifier asks about empty input:</p>
+      <figure>
+        <pre class="code" data-lang="tn" data-bad="4">fn heaviest(grams: Array[Int]) -&gt; Int
+  ensures forall i in 0..len(grams) : grams[i] &lt;= result
+{
+  var best = grams[0]
+  for i in 1..len(grams)
+    invariant forall j in 0..i : grams[j] &lt;= best
+  {
+    if grams[i] &gt; best { set best = grams[i] }
+  }
+  return best
+}</pre>
+      </figure>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3007</span><span class="v-msg">index might be out of bounds: grams[0]</span></div>
+        <dl class="v-cx"><div><dt>grams</dt><dd>[] (len 0)</dd></div></dl>
+        <p class="v-hint">Prove 0 &lt;= index &lt; len(array): add a precondition, a loop invariant, or a guard.</p>
+      </div>
+      <p>Adding <code>requires len(grams) &gt; 0</code> fixes it, and every caller now has to show its array isn't empty. The loop invariant then carries the proof of the <span class="c">ensures</span> clause.</p>
+
+      <h3>Overflow</h3>
+      <p>By default, <code>Int</code> arithmetic compiles to overflow-checked IL (<code>add.ovf</code>), so a proof about unbounded integers describes every run that completes: overflow stops the program rather than wrapping. Declaring <code>module Bank total</code> asks the verifier to prove overflow can't happen at all. In the banking example, it found the account that can't receive money:</p>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3011</span><span class="v-msg">integer overflow possible: dst.balance + amount</span></div>
+        <dl class="v-cx"><div><dt>dst</dt><dd>(Account 0 9223372036854775807)</dd></div><div><dt>amount</dt><dd>1</dd></div></dl>
+      </div>
+    </section>
+
+    <section id="classes">
+      <h2><span class="ch">7</span>Classes, interfaces and invariants</h2>
+      <p>V# classes are immutable records with methods and <span class="c">invariant</span>s: rules that every value of the class satisfies. Because a value can't change after it's built, an invariant proved at construction holds forever. Every method, every caller and every collection of the class can rely on it without re-checking.</p>
+      <p>Interface methods carry contracts too. Each implementation must meet the <span class="c">ensures</span> it inherits, which is what makes it safe for code to depend on the interface rather than the class.</p>
+      <figure>
+        <pre class="code" data-lang="tn" data-bad="10,14,19">interface Sized {
+  fn size(self) -&gt; Int
+    ensures result &gt; 0
+}
+
+class Range(lo: Int, hi: Int) implements Sized {
+  invariant self.lo &lt;= self.hi
+
+  fn size(self) -&gt; Int {
+    return self.hi - self.lo
+  }
+
+  fn shifted(self, by: Int) -&gt; Range {
+    return self with { hi: self.hi + by }
+  }
+}
+
+fn make(a: Int, b: Int) -&gt; Range {
+  return Range(lo: a, hi: b)
+}</pre>
+      </figure>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3001</span><span class="v-msg">'Range.size' might not meet the postcondition it inherits from 'Sized.size': result &gt; 0</span></div>
+        <dl class="v-cx"><div><dt>self</dt><dd>(Range 0 0)</dd></div><div><dt>result</dt><dd>0</dd></div></dl>
+        <div class="v-head" style="margin-top:16px"><span class="v-badge">Refuted</span><span class="v-code">TN3016</span><span class="v-msg">invariant of class 'Range' might not hold: self.lo &lt;= self.hi</span></div>
+        <dl class="v-cx"><div><dt>self</dt><dd>(Range 0 38)</dd></div><div><dt>by</dt><dd>-39</dd></div></dl>
+        <div class="v-head" style="margin-top:16px"><span class="v-badge">Refuted</span><span class="v-code">TN3016</span><span class="v-msg">invariant of class 'Range' might not hold: self.lo &lt;= self.hi</span></div>
+        <dl class="v-cx"><div><dt>a</dt><dd>1</dd></div><div><dt>b</dt><dd>0</dd></div></dl>
+      </div>
+      <p>Three bugs, three concrete witnesses: an empty range has size zero, shifting by a large negative number inverts the range, and <code>make</code> trusts its arguments. In the assembly, <code>Range</code> is a <code>public sealed class Range : Sized</code>, and its constructor checks the invariant at run time, so C# code can't build an invalid one either.</p>
+    </section>
+
+    <section id="exceptions">
+      <h2><span class="ch">8</span>Exceptions as part of the contract</h2>
+      <p>In C#, the exceptions a method can throw are documentation at best. In V#, they're part of the contract, together with the condition under which each one happens: <span class="c">throws</span> <code>E</code> <span class="c">when</span> <code>cond</code>. Every exception is either caught or declared, and the verifier proves the conditions.</p>
+      <figure>
+        <pre class="code" data-lang="tn">exception Overdrawn(balance: Decimal, amount: Decimal)
+exception Frozen
+
+fn withdraw(a: Account, amount: Decimal) -&gt; Account
+  requires amount &gt; 0m
+  ensures result.balance == a.balance - amount
+  throws Frozen when a.frozen
+  throws Overdrawn when !a.frozen &amp;&amp; amount &gt; a.balance
+{
+  if a.frozen { throw Frozen }
+  if amount &gt; a.balance { throw Overdrawn(balance: a.balance, amount: amount) }
+  return a with { balance: a.balance - amount }
+}
+
+// The guard rules out both conditions, so this needs no try at all.
+fn withdraw_if_possible(a: Account, amount: Decimal) -&gt; Account
+  requires amount &gt; 0m
+{
+  if a.frozen || amount &gt; a.balance { return a }
+  return withdraw(a: a, amount: amount)
+}</pre>
+      </figure>
+      <p>A caller that rules out only one of the conditions is told which exception can still escape, and on which input:</p>
+      <div class="verdict">
+        <div class="v-head"><span class="v-badge">Refuted</span><span class="v-code">TN3017</span><span class="v-msg">'Short' might escape 'careless': !frozen &amp;&amp; amount &gt; balance might hold here</span></div>
+        <dl class="v-cx"><div><dt>balance</dt><dd>0</dd></div><div><dt>amount</dt><dd>1</dd></div></dl>
+        <p class="v-hint">The callee throws 'Short' only when its 'when' condition holds. Prove it false here (a guard or a precondition), catch 'Short', or declare 'throws Short'.</p>
+      </div>
+      <p>The condition binds the thrower too. A function that promises <code>throws Frozen when x &gt; 10</code> but throws when <code>x &gt; 5</code> is caught with <code>x = 6</code>. Inside a <code>catch</code>, the verifier knows the condition that caused the throw. That's how a function that catches <code>Frozen</code> and <code>Overdrawn</code> can prove <code>Err(e) =&gt; a.frozen || amount &gt; a.balance</code>.</p>
+      <p>In the assembly, <code>Overdrawn</code> is a sealed class deriving from <code>System.Exception</code>, with <code>balance</code> and <code>amount</code> properties and the message <code>Overdrawn(balance: 100, amount: 500)</code>. C# catches it like any other exception, including from a faulted <code>Task</code>.</p>
+    </section>
+
+    <section id="how">
+      <h2><span class="ch">9</span>How the proof works</h2>
+      <p>There's no magic and no annotation-driven test generation. For each function, <code>vsharpc</code> does this:</p>
+      <ol class="steps">
+        <li>It parses and type-checks the module, including effects, exhaustiveness and the routing of every exception.</li>
+        <li>It executes each function <em>symbolically</em>. Instead of concrete values, variables hold logical terms, and each branch adds a fact to the path. Paths merge after an <code>if</code>, so cost grows linearly with the number of branches.</li>
+        <li>Each obligation becomes one query to Z3, the SMT solver from Microsoft Research: "find a state that satisfies everything known here but violates this." If none exists, the obligation is proved and becomes a known fact. If one exists, the solver's model is your counterexample.</li>
+        <li>Calls are replaced by the callee's contract and loops by their invariants, so each function is proved on its own.</li>
+        <li>Only when every obligation is discharged does the emitter write IL. The class gets <code>[Verified("vsharpc")]</code>, and each method carries its contract as <code>[Contract(...)]</code> attributes.</li>
+      </ol>
+      <p>Two consequences are worth internalizing. A counterexample after a loop is relative to the invariant: if it shows a state the program can't really reach, the invariant is too weak, not the code wrong. And the same program gives the same answer every time, because quantifiers are only instantiated through explicit triggers and contracts are unfolded one level.</p>
+
+      <h3>What a proof doesn't cover</h3>
+      <p>A proof is only as good as what it was asked to prove. Three limits matter in practice:</p>
+      <ul>
+        <li><strong>A weak contract is easy to satisfy.</strong> <code>ensures match result { Ok(m) =&gt; ..., Err(e) =&gt; true }</code> lets a function reject every request and still verify. When you review V# code, review the contract first: ask what a wrong implementation could do and still pass.</li>
+        <li><strong>Some things are trusted, not proved.</strong> These include the contracts of <code>extern</code> functions that bind .NET methods, C# implementations and mocks of V# interfaces, the Z3 solver itself, and the compiler's code generator.</li>
+        <li><strong>Some models are approximate.</strong> <code>Decimal</code> is reasoned about as an exact real number, so a proof about <code>x / 3 * 3</code> describes exact arithmetic, not decimal rounding. Culture-sensitive string functions are described only partially. Run-time stops (overflow outside total mode, stack exhaustion, out of memory) end the program rather than return a wrong answer.</li>
+      </ul>
+      <p>For the advanced cases there's more: <code>spec fn</code> for mathematical definitions, <code>lemma fn</code> for reusable proofs, ghost variables that exist only for the proof, and quantifiers over whole types. The <a href="../SPEC.md">language specification</a> covers them.</p>
+    </section>
+
+    <section id="interop">
+      <h2><span class="ch">10</span>Calling V# from C#</h2>
+      <p>Reference the assembly and call it. Names appear exactly as declared, records are classes with get-only properties, and unions are an abstract base with a sealed class per case.</p>
+      <figure>
+        <figcaption>C#, referencing <code>Pricing.dll</code> and <code>VSharp.Runtime.dll</code></figcaption>
+        <pre class="code" data-lang="cs">using System.Reflection;
+using VSharp.Runtime;
+
+decimal total = Pricing.checkout(80.00m, 15m);    // 68.00
+
+try
+{
+    Pricing.discounted(80m, 150m);
+}
+catch (ContractViolationException e)
+{
+    // discounted: precondition violated by the caller: 0m &lt;= percent &amp;&amp; percent &lt;= 100m
+    Console.WriteLine(e.Message);
+}
+
+foreach (var c in typeof(Pricing).GetMethod("discounted")!.GetCustomAttributes&lt;ContractAttribute&gt;())
+    Console.WriteLine($"{c.Kind}: {c.Text}");     // requires: price &gt;= 0m ...</pre>
+      </figure>
+      <p>That <code>ContractViolationException</code> is the important part. V# callers proved the precondition at compile time; a C# caller didn't. So every public method whose preconditions or refined parameters can run at run time is compiled twice. A public wrapper checks them and throws on a violation, and an internal body is called directly by V# code at no cost. The guarantee holds at the boundary, not just inside V#.</p>
+      <ul>
+        <li><strong>Dependency injection and mocks.</strong> Register a V# class as the implementation of a V# interface, or mock the interface in tests (the compiler's own tests use <code>DispatchProxy</code>). A mock is trusted to keep the interface's contract.</li>
+        <li><strong>Serialization.</strong> Records have structural equality and serialize with System.Text.Json as is. .NET attributes such as <code>@JsonPropertyName("id")</code> pass through.</li>
+        <li><strong>Async.</strong> A function with <code>effects async</code> is a <code>Task&lt;T&gt;</code>-returning method, so C# awaits it.</li>
+      </ul>
+    </section>
+
+    <section id="ai">
+      <h2><span class="ch">11</span>Writing V# with an AI</h2>
+      <p>V# was designed for a workflow where a person writes or reviews the contract and a model writes the body, with the verifier deciding when it's done. Three tools make that loop work.</p>
+      <p><strong>Typed holes.</strong> Write <code>?name</code> where an expression is still missing. Compilation stops and reports what the hole must satisfy:</p>
+      <figure>
+        <pre class="code" data-lang="tn">type Weight = Int where self &gt; 0
+
+fn kilos(grams: Weight) -&gt; Int
+  ensures result &gt;= 1
+  ensures result * 1000 &gt;= grams
+{
+  return ?kilos
+}</pre>
+      </figure>
+      <div class="verdict" style="border-left-color: var(--slate-muted)">
+        <div class="v-head"><span class="v-badge" style="color:var(--slate-ink)">Hole</span><span class="v-code">TN4001</span><span class="v-msg">hole ?kilos has type Int</span></div>
+        <pre class="term" style="margin-top:10px">in scope: grams: Weight
+must satisfy: postcondition of 'kilos' might not hold: result &gt;= 1
+must satisfy: postcondition of 'kilos' might not hold: result * 1000 &gt;= grams</pre>
+        <p class="v-hint">Replace the hole with an expression of this type that meets the obligations listed.</p>
+      </div>
+      <p><strong>Diagnostics as data.</strong> With <code>--json</code>, every error has a stable code, a span, a hint and the counterexample as structured values, so a model can repair code without parsing prose. This is the hero example's diagnostic, with the hint left out:</p>
+      <div class="verdict" style="border-left-color: var(--slate-muted)">
+        <pre class="term">{
+  "code": "TN3001",
+  "severity": "error",
+  "message": "postcondition of 'discounted' might not hold: 0m &lt;= result &amp;&amp; result &lt;= price",
+  "file": "out/primer/hero.vs",
+  "line": 7, "col": 3, "endLine": 7, "endCol": 40,
+  "status": "refuted",
+  "counterexample": { "price": "1m", "percent": "101m", "result": "-0.01m" }
+}</pre>
+      </div>
+      <p><strong>Signatures without bodies.</strong> <code>vsharpc sig</code> prints every type, signature and contract in a module: everything a caller may rely on, at a fraction of the size. Because verification is modular, that's all a model needs in context to write a correct caller. <code>vsharpc explain TN3017</code> explains any code with an example fix.</p>
+      <p>Other choices serve the same goal: one way to say each thing, required named arguments, no shadowing, and one canonical format (<code>vsharpc fmt</code>). Generated code has fewer places to go subtly wrong, and a diff shows only real changes.</p>
+    </section>
+
+    <section id="fit">
+      <h2><span class="ch">12</span>Where it fits</h2>
+      <p>V# works best as a verified core inside a C# application. `samples/scheduling` is a three-file V# module for recurrence, appointment status, and authorization limits.</p>
+      <table>
+        <thead><tr><th>Write it in V#</th><th>Keep it in C#</th></tr></thead>
+        <tbody>
+          <tr><td>Pricing, fees, discounts, tax rules</td><td>Controllers and HTTP plumbing</td></tr>
+          <tr><td>Eligibility and authorization limits</td><td>Entity Framework and data access</td></tr>
+          <tr><td>Scheduling and calendar rules</td><td>Logging, configuration, DI setup</td></tr>
+          <tr><td>State transitions and status logic</td><td>Mutable object graphs and class inheritance</td></tr>
+          <tr><td>Money movement and ledger invariants</td><td>Concurrency (<code>Task.WhenAll</code>), cancellation, UI</td></tr>
+        </tbody>
+      </table>
+      <p>There are also current limits. Classes are sealed and immutable, and there's no inheritance between classes. Async is sequential, with <code>await</code> as a statement. Exceptions have no <code>finally</code>. An <code>extern</code> binds static .NET methods over simple types. The <a href="../SPEC.md#10-implementation-status">implementation status</a> lists them all.</p>
+    </section>
+
+    <section id="start">
+      <h2><span class="ch">13</span>Try it</h2>
+      <p>From the project directory, with the .NET 10 SDK installed:</p>
+      <figure>
+        <pre class="code" data-lang="sh">dotnet build
+dotnet run --project src/VSharp.Compiler -- run samples/exceptions.vs
+dotnet run --project src/VSharp.Compiler -- check examples/bank.vs --json
+dotnet run --project src/VSharp.Compiler -- sig samples/business.vs
+dotnet run --project src/VSharp.Compiler -- explain TN3001</pre>
+      </figure>
+      <p>A good first exercise: open <code>samples/exceptions.vs</code>, delete one guard or one <span class="c">requires</span> line, and run <code>check</code>. Read the counterexample, decide whether the code or the contract is wrong, and fix it. That loop, a claim, a witness and a fix, is what writing V# feels like.</p>
+    </section>
+
+  </article>
+</div>
+
+<footer>
+  Every compiler message on this page is real <code>vsharpc</code> output, from the programs shown or from the steps of the bank walkthrough. In a counterexample, a value such as <code>(Range 0 38)</code> lists a record's fields in order.
+</footer>
+
+<script>
+(() => {
+  const KW = {
+    tn: new Set("module type fn spec lemma extern from let var ghost set if else then while for in match return assert print do break continue class interface implements exception throw try catch await self result true false forall exists trigger total effects use const with grad wrt".split(" ")),
+    cs: new Set("public private internal static sealed abstract class record interface decimal int long string bool void var new return using try catch throw async await foreach in if else true false null typeof".split(" ")),
+    sh: new Set(["dotnet"]),
+  };
+  const CLAIM = new Set("requires ensures invariant decreases throws when".split(" "));
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const TOKEN = /(\/\/.*$)|("(?:\\.|[^"\\])*")|(\?[A-Za-z_]\w*)|(\b\d+(?:\.\d+)?m?\b)|(\[[A-Z]\w*(?=[(\]]))|([A-Za-z_]\w*)/g;
+
+  function highlightLine(line, lang) {
+    let out = "", last = 0;
+    line.replace(TOKEN, (m, cm, str, hole, num, attr, word, i) => {
+      out += esc(line.slice(last, i));
+      last = i + m.length;
+      if (cm) out += `<span class="cm">${esc(m)}</span>`;
+      else if (str) out += `<span class="s">${esc(m)}</span>`;
+      else if (hole && lang === "tn") out += `<span class="h">${esc(m)}</span>`;
+      else if (num) out += `<span class="n">${esc(m)}</span>`;
+      else if (attr) out += `[<span class="t">${esc(m.slice(1))}</span>`;
+      else if (word && lang === "tn" && CLAIM.has(m)) out += `<span class="c">${m}</span>`;
+      else if (word && KW[lang]?.has(m)) out += `<span class="k">${m}</span>`;
+      else if (word && /^[A-Z]/.test(m) && lang !== "sh") out += `<span class="t">${m}</span>`;
+      else out += esc(m);
+      return m;
+    });
+    return out + esc(line.slice(last));
+  }
+
+  document.querySelectorAll("pre.code").forEach(pre => {
+    const lang = pre.dataset.lang || "tn";
+    const mark = (attr) => new Set((pre.dataset[attr] || "").split(",").filter(Boolean).map(Number));
+    const bad = mark("bad"), good = mark("good");
+    pre.innerHTML = pre.textContent.split("\n").map((line, i) => {
+      const cls = bad.has(i + 1) ? " bad" : good.has(i + 1) ? " good" : "";
+      return `<span class="ln${cls}">${highlightLine(line, lang) || " "}</span>`;
+    }).join("");
+  });
+
+  document.querySelectorAll("[data-flip]").forEach(flip => {
+    const tabs = [...flip.querySelectorAll('[role="tab"]')];
+    const panes = [...flip.querySelectorAll('[role="tabpanel"]')];
+    const select = (k, focus) => {
+      tabs.forEach((t, j) => { t.setAttribute("aria-selected", String(j === k)); t.tabIndex = j === k ? 0 : -1; });
+      panes.forEach((p, j) => { p.hidden = j !== k; });
+      if (focus) tabs[k].focus();
+    };
+    tabs.forEach((t, k) => {
+      t.addEventListener("click", () => select(k));
+      t.addEventListener("keydown", e => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          select((k + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length, true);
+        }
+      });
+    });
+    select(0);
+  });
+
+  const ask = document.getElementById("ask");
+  const verdict = document.getElementById("hero-verdict");
+  const note = document.getElementById("hero-note");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  ask.addEventListener("click", () => {
+    ask.disabled = true;
+    ask.textContent = "Searching every input\u2026";
+    setTimeout(() => {
+      document.querySelectorAll("#hero-code .ln")[2].classList.add("bad");
+      verdict.hidden = false;
+      ask.hidden = true;
+      const rows = [...verdict.querySelectorAll(".v-cx div")];
+      rows.forEach((r, i) => [...r.children].forEach(c => { c.style.transitionDelay = reduced ? "0s" : `${150 + i * 180}ms`; }));
+      void verdict.offsetHeight;
+      verdict.classList.remove("pending");
+      setTimeout(() => { note.hidden = false; }, reduced ? 0 : 750);
+    }, reduced ? 0 : 900);
+  });
+
+  const links = [...document.querySelectorAll("nav.toc a")];
+  const byId = new Map(links.map(a => [a.getAttribute("href").slice(1), a]));
+  const seen = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove("current"));
+        byId.get(e.target.id)?.classList.add("current");
+      }
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  document.querySelectorAll("article > section").forEach(s => seen.observe(s));
+})();
+</script>
+</body>
+</html>

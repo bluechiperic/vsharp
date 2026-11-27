@@ -1,5 +1,7 @@
 # V#
 
+![V#: contracts proven, counterexamples found, IL emitted.](docs/vsharp-header.png)
+
 V# is a .NET language an agent can write, and a compiler that decides when the agent is done.
 
 A person writes the contract. An agent writes the body. `vsharpc` proves the body meets the contract for every input, or returns the input that breaks it. A module that compiles is an ordinary .NET assembly. C# calls it like any other library.

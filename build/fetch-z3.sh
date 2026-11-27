@@ -196,6 +196,7 @@ build_linux_arm64() {
   local build="$CACHE/linux-arm64-build"
   rm -rf "$build"
   cmake -S "$CACHE/src" -B "$build" \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_SYSTEM_NAME=Linux \
     -DCMAKE_SYSTEM_PROCESSOR=aarch64 \

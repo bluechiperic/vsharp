@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="VSharp.VisualStudio" Version="0.3.7" Language="en-US" Publisher="VSharp" />
+    <DisplayName>V#</DisplayName>
+    <Description xml:space="preserve">Syntax highlighting, project templates, and build support for V#, a verifiable .NET language.</Description>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 19.0)">
+      <ProductArchitecture>amd64</ProductArchitecture>
+    </InstallationTarget>
+  </Installation>
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0, 19.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="languages.pkgdef" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="VSharp.VisualStudio.dll" AssemblyName="VSharp.VisualStudio, Version=0.3.7.0, Culture=neutral, PublicKeyToken=null" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="File" Path="VSharp.VisualStudio.dll" />
+    <Asset Type="Microsoft.VisualStudio.ImageManifest" d:Source="File" Path="vsharp.imagemanifest" />
+    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="File" Path="ProjectTemplates" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" d:Source="File" Path="ItemTemplates" />
+  </Assets>
+</PackageManifest>

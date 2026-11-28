@@ -1,0 +1,7 @@
+module $safeprojectname$
+
+fn hello() -> Int
+  ensures result == 1
+{
+  return 1
+}

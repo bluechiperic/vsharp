@@ -2,7 +2,8 @@
   "name": "vsharp",
   "displayName": "V#",
   "description": "Syntax highlighting for V#, a verifiable .NET language.",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "icon": "icons/vsharp.png",
   "publisher": "vsharp",
   "license": "Apache-2.0",
   "engines": {
@@ -29,7 +30,11 @@
         "id": "vsharp",
         "aliases": ["V#", "vsharp"],
         "extensions": [".vs"],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/vsharp.png",
+          "dark": "./icons/vsharp.png"
+        }
       }
     ],
     "grammars": [

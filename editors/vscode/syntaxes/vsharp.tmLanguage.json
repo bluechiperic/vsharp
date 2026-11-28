@@ -1,6 +1,7 @@
 {
   "scopeName": "source.vsharp",
   "name": "V#",
+  "fileTypes": ["vs"],
   "patterns": [
     { "include": "#comment" },
     { "include": "#tokens" }

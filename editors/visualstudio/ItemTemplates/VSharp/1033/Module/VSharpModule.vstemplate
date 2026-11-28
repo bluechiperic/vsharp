@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Item">
+  <TemplateData>
+    <Name>V# Module</Name>
+    <Description>A V# source file. The module name is the name you type.</Description>
+    <Icon>vsharp.ico</Icon>
+    <TemplateID>VSharp.Module</TemplateID>
+    <TemplateGroupID>VSharp</TemplateGroupID>
+    <ProjectType>VSharp</ProjectType>
+    <SortOrder>10</SortOrder>
+    <DefaultName>Module.vs</DefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$.vs">Module.txt</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

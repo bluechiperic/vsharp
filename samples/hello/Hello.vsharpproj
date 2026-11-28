@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <VSharpSdkRoot Condition="'$(VSharpSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\..\sdk\VSharp.NET.Sdk\Sdk\</VSharpSdkRoot>
+  </PropertyGroup>
+
+  <Import Project="$(VSharpSdkRoot)Sdk.props" />
+
+  <PropertyGroup>
+    <ProjectGuid>{8F4E2C1A-6B7D-4E90-A1B2-456789ABCDEF}</ProjectGuid>
+    <AssemblyName>Hello</AssemblyName>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <Import Project="$(VSharpSdkRoot)Sdk.targets" />
+</Project>

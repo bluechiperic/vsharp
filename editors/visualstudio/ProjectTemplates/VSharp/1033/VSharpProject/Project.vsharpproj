@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <!-- Inside this repository the SDK sits at sdk/VSharp.NET.Sdk. A project created elsewhere uses the copy the extension installed under %LOCALAPPDATA%. -->
+    <VSharpSdkRoot Condition="'$(VSharpSdkRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\..\sdk\VSharp.NET.Sdk\Sdk\Sdk.props')">$(MSBuildThisFileDirectory)..\..\sdk\VSharp.NET.Sdk\Sdk\</VSharpSdkRoot>
+    <VSharpSdkRoot Condition="'$(VSharpSdkRoot)' == ''">$(LOCALAPPDATA)\Microsoft\VisualStudio\VSharp\Sdk\</VSharpSdkRoot>
+    <ProjectGuid>{$guid1$}</ProjectGuid>
+    <RootNamespace>$safeprojectname$</RootNamespace>
+    <AssemblyName>$safeprojectname$</AssemblyName>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <Import Project="$(VSharpSdkRoot)Sdk.props" />
+  <Import Project="$(VSharpSdkRoot)Sdk.targets" />
+</Project>

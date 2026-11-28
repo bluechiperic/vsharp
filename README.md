@@ -96,7 +96,9 @@ On Linux ARM64 the official archives have no `libz3.so` for the host. Build that
 ./build/fetch-z3.sh --build-linux-arm64
 ```
 
-`check` parses, type-checks, and verifies. `build` writes `<Module>.dll` and refuses to emit it when any obligation fails. `run` builds, then runs `main`. Tests are `dotnet test VSharp.sln`. On Windows, `build/package.ps1` is the same entry as `build/package.sh` and needs Git Bash.
+`check` parses, type-checks, and verifies. `build` writes `<Module>.dll` and refuses to emit it when any obligation fails. `run` builds, then runs `main`. Tests are `dotnet test VSharp.sln`.
+
+A `.vsharpproj` file builds the same way from `dotnet` or Visual Studio. `samples/hello` is one. The project imports `sdk/VSharp.NET.Sdk`, which runs `vsharpc build` and writes the assembly to `bin\Debug`. Set `VSharpCompiler` if `vsharpc` is not next to the SDK in this repo. On Windows, `build/package.ps1` is the same entry as `build/package.sh` and needs Git Bash.
 
 ## Install
 
@@ -163,7 +165,12 @@ vsharpc check samples/search.vs
 
 ## Editor
 
-[editors/vscode](editors/vscode) is a VS Code extension that highlights `.vs` files: keywords, contracts, effects, typed holes, and string interpolation. Install steps are in that directory's README.
+Both editors use the same grammar.
+
+- [editors/vscode](editors/vscode) highlights `.vs` files in VS Code and Cursor.
+- [editors/visualstudio](editors/visualstudio) highlights them in Visual Studio, opens `.vsharpproj` files, and adds a V# project and a V# module file to the New Project and Add New Item dialogs.
+
+Install steps are in each directory's README.
 
 ## Read next
 

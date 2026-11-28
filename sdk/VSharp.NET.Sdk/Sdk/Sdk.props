@@ -1,0 +1,32 @@
+<Project>
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    <OutputType Condition="'$(OutputType)' == ''">Library</OutputType>
+    <AssemblyName Condition="'$(AssemblyName)' == ''">$(MSBuildProjectName)</AssemblyName>
+    <TargetName>$(AssemblyName)</TargetName>
+    <TargetExt>.dll</TargetExt>
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">bin\</BaseOutputPath>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(BaseOutputPath)$(Configuration)\</OutputPath>
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">obj\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
+    <TargetPath>$(OutputPath)$(TargetName)$(TargetExt)</TargetPath>
+    <AddAdditionalExplicitAssemblyReferences>false</AddAdditionalExplicitAssemblyReferences>
+    <!-- vsharpc writes the assembly straight into $(OutputPath), next to the runtime it copies. -->
+    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+    <SkipCopyBuildProduct>true</SkipCopyBuildProduct>
+    <VSharpVerify Condition="'$(VSharpVerify)' == ''">true</VSharpVerify>
+    <VSharpTotal Condition="'$(VSharpTotal)' == ''">false</VSharpTotal>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(BaseOutputPath)**;$(BaseIntermediateOutputPath)**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <VSharpCompile Include="**/*.vs" Exclude="$(DefaultItemExcludes)" />
+    <None Include="@(VSharpCompile)" />
+    <ProjectCapability Include="VSharp" />
+  </ItemGroup>
+
+</Project>

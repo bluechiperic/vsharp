@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/VisualStudio/ImageManifestSchema/2014">
+  <Symbols>
+    <String Name="Resources" Value="/VSharp.VisualStudio;component/Resources" />
+    <Guid Name="VSharpImages" Value="{A7C3E1D4-5B28-4F90-8C16-2D9E0A4B7F31}" />
+    <ID Name="VSharp" Value="1" />
+    <ID Name="VSharpFile" Value="2" />
+  </Symbols>
+  <Images>
+    <Image Guid="$(VSharpImages)" ID="$(VSharpFile)" AllowColorInversion="false">
+      <Source Uri="$(Resources)/vsharp-file-16.png">
+        <Size Value="16" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-file-32.png">
+        <Size Value="32" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-file-48.png">
+        <Size Value="48" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-file-64.png">
+        <Size Value="64" />
+      </Source>
+    </Image>
+    <Image Guid="$(VSharpImages)" ID="$(VSharp)" AllowColorInversion="false">
+      <Source Uri="$(Resources)/vsharp-icon-16.png">
+        <Size Value="16" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-icon-32.png">
+        <Size Value="32" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-icon-48.png">
+        <Size Value="48" />
+      </Source>
+      <Source Uri="$(Resources)/vsharp-icon-64.png">
+        <Size Value="64" />
+      </Source>
+    </Image>
+  </Images>
+  <ImageLists />
+</ImageManifest>

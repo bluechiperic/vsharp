@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>V# Project</Name>
+    <Description>A V# library. The compiler proves each contract, then emits IL.</Description>
+    <Icon>vsharp.ico</Icon>
+    <TemplateID>VSharp.Project</TemplateID>
+    <TemplateGroupID>VSharp</TemplateGroupID>
+    <ProjectType>VSharp</ProjectType>
+    <LanguageTag>V#</LanguageTag>
+    <PlatformTag>Windows</PlatformTag>
+    <ProjectTypeTag>Library</ProjectTypeTag>
+    <SortOrder>100</SortOrder>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>VSharpProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <PromptForSaveOnCreation>true</PromptForSaveOnCreation>
+  </TemplateData>
+  <TemplateContent>
+    <Project TargetFileName="$safeprojectname$.vsharpproj" File="Project.vsharpproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.vs">Module.txt</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>VSharp.VisualStudio, Version=0.3.7.0, Culture=neutral, PublicKeyToken=null</Assembly>
+    <FullClassName>VSharp.VisualStudio.ProjectWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

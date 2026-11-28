@@ -16,7 +16,7 @@ npm test
 npx @vscode/vsce package
 ```
 
-In VS Code or Cursor, run **Extensions: Install from VSIX…** and choose the generated `vsharp-0.1.0.vsix`.
+In VS Code or Cursor, run **Extensions: Install from VSIX…** and choose the generated `vsharp-0.1.1.vsix`.
 
 `.vs` is also used by some shader tools for vertex shaders. If those files are highlighted as V#, set the association for that workspace:
 

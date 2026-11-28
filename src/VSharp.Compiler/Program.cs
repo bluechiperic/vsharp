@@ -110,8 +110,8 @@ public static class Compilation
     public static string Emit(CompileResult result, string source, string outDir, bool entryChecks = true) =>
         new Emitter(result.Module!, result.Sources.Count > 0 ? result.Sources : [source], entryChecks).Emit(outDir, result.Verified);
 
-    public static string Emit(CompileResult result, string outDir, bool entryChecks = true) =>
-        new Emitter(result.Module!, result.Sources, entryChecks).Emit(outDir, result.Verified);
+    public static string Emit(CompileResult result, string outDir, bool entryChecks = true, string? outputFile = null) =>
+        new Emitter(result.Module!, result.Sources, entryChecks).Emit(outDir, result.Verified, outputFile);
 }
 
 public static class Program
@@ -121,8 +121,8 @@ public static class Program
 
         usage:
           vsharpc check <files> [options]
-          vsharpc build <files> [-o <dir>] [options]
-          vsharpc run   <files> [-o <dir>] [options]
+          vsharpc build <files> [-o <dir> | --out <file.dll>] [options]
+          vsharpc run   <files> [-o <dir> | --out <file.dll>] [options]
           vsharpc fmt   <files> [--write | --check]
           vsharpc sig   <files> [--json]
           vsharpc explain [<code>] [--json]
@@ -130,7 +130,7 @@ public static class Program
         <files> is one or more .vs files or directories (every .vs file in them); together they form one module.
 
         check     parse, type-check and verify; exit code 1 if anything fails
-        build     check, then write <Module>.dll (IL) to the output directory (default: ./out)
+        build     check, then write <Module>.dll (IL). -o sets the directory (default: ./out); --out sets the file
         run       build, then execute the module's 'main' function
         fmt       print the canonical layout; --write rewrites the file, --check exits 1 if it is not canonical
         sig       print the module's types, signatures and contracts without bodies
@@ -172,6 +172,7 @@ public static class Program
         var timeout = 5000;
         string? smtDir = null;
         var outDir = "out";
+        string? outFile = null;
         var references = new List<string>();
         for (var i = 1 + inputs.Count; i < args.Length; i++)
         {
@@ -186,6 +187,7 @@ public static class Program
                 case "--timeout" when i + 1 < args.Length && int.TryParse(args[i + 1], out var t): timeout = t; i++; break;
                 case "--emit-smt" when i + 1 < args.Length: smtDir = args[++i]; break;
                 case "-o" when i + 1 < args.Length: outDir = args[++i]; break;
+                case "--out" when i + 1 < args.Length: outFile = Path.GetFullPath(args[++i]); break;
                 case "-r" or "--reference" when i + 1 < args.Length:
                     if (!File.Exists(args[i + 1]))
                     {
@@ -228,7 +230,8 @@ public static class Program
         string? dll = null;
         if (result.Ok && command != "check")
         {
-            dll = Compilation.Emit(result, outDir, entryChecks);
+            if (outFile != null) outDir = Path.GetDirectoryName(outFile)!;
+            dll = Compilation.Emit(result, outDir, entryChecks, outFile);
             foreach (var r in references) File.Copy(r, Path.Combine(outDir, Path.GetFileName(r)), overwrite: true);
         }
         Report(result, json, dll);

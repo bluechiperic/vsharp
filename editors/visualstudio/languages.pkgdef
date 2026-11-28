@@ -1,0 +1,47 @@
+// Points Visual Studio's TextMate engine at the V# grammar.
+[$RootKey$\TextMate\Repositories]
+"VSharp"="$PackageFolder$\Grammars"
+
+// Comment toggling, brackets, and indentation for scope source.vsharp.
+[$RootKey$\TextMate\LanguageConfiguration\GrammarMapping]
+"source.vsharp"="$PackageFolder$\language-configuration.json"
+
+// Open .vs sources in the editor that hosts TextMate grammars.
+// Priority 32 is ahead of that editor's wildcard registration (37).
+[$RootKey$\Editors\{3B902123-F8A7-4915-9F01-361F908088D0}\Extensions]
+"vs"=dword:00000020
+
+[$RootKey$\ShellFileAssociations\.vs]
+"DefaultIcon"="$PackageFolder$\Resources\vsharp-file.ico,0"
+"DefaultIconMoniker"="{A7C3E1D4-5B28-4F90-8C16-2D9E0A4B7F31}:2"
+
+// .vsharpproj opens in the Common Project System and builds through MSBuild.
+[$RootKey$\Projects\{C4E8A1D2-7B3F-4E95-8A16-2F9D0C5B7E31}]
+@="ProjectFactory"
+"DisplayName"="V#"
+"DisplayProjectFileExtensions"="V# Project Files (*.vsharpproj);*.vsharpproj"
+"Package"="{3347BEE8-D7A1-4082-95E4-38A439553CC2}"
+"DefaultProjectExtension"="vsharpproj"
+"PossibleProjectExtensions"="vsharpproj"
+"Language(VsTemplate)"="VSharp"
+"DisplayProjectType(VsTemplate)"="V#"
+"DisableAsynchronousSolutionLoad"=dword:00000000
+"DisableAsynchronousProjectTreeLoad"=dword:00000001
+"PrefetchFactory"="{3998970A-AEE1-4216-A54F-0A99D20A1FAB}"
+"Capabilities"="HandlesOwnReload;OpenProjectFile;EnableOnDemandExcludedFolderLoading;VSharp"
+"PreferredPersistProjectTypeGuid"="{C4E8A1D2-7B3F-4E95-8A16-2F9D0C5B7E31}"
+
+[$RootKey$\ShellFileAssociations\.vsharpproj]
+"DefaultIcon"="$PackageFolder$\Resources\vsharp.ico,0"
+"DefaultIconMoniker"="{A7C3E1D4-5B28-4F90-8C16-2D9E0A4B7F31}:1"
+
+// Lets the image service load VSharp.VisualStudio.dll when it resolves the icon.
+[$RootKey$\BindingPaths\{B7E4C2A1-6D39-4F18-9A27-3E0C1B8D5F42}]
+"$PackageFolder$"=""
+
+[$RootKey$\RuntimeConfiguration\dependentAssembly\codeBase\{C8F5D3B2-7E4A-4019-8B38-4F1D2C9E6A53}]
+"name"="VSharp.VisualStudio"
+"publicKeyToken"=""
+"culture"="neutral"
+"version"="0.3.7.0"
+"codeBase"="$PackageFolder$\VSharp.VisualStudio.dll"

@@ -1,0 +1,62 @@
+<Project>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+
+  <!-- V# resolves its own runtime. These targets exist for C# and look for .NET Framework reference assemblies. -->
+  <Target Name="GetReferenceAssemblyPaths" />
+  <Target Name="CreateManifestResourceNames" />
+  <Target Name="CreateCustomManifestResourceNames" />
+
+  <!-- Visual Studio's project system loads a project only after these design-time targets are imported. They are not part of the dotnet SDK. Our CoreCompile below replaces anything they define. -->
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets"
+          Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets')" />
+
+  <!-- The repo compiler, when this SDK is the copy under sdk/VSharp.NET.Sdk. -->
+  <PropertyGroup>
+    <_VSharpRepoBin>$(MSBuildThisFileDirectory)..\..\..\src\VSharp.Compiler\bin</_VSharpRepoBin>
+    <_VSharpCompilerDll Condition="'$(VSharpCompiler)' == '' and Exists('$(_VSharpRepoBin)\$(Configuration)\net10.0\vsharpc.dll')">$(_VSharpRepoBin)\$(Configuration)\net10.0\vsharpc.dll</_VSharpCompilerDll>
+    <_VSharpCompilerDll Condition="'$(_VSharpCompilerDll)' == '' and Exists('$(_VSharpRepoBin)\Debug\net10.0\vsharpc.dll')">$(_VSharpRepoBin)\Debug\net10.0\vsharpc.dll</_VSharpCompilerDll>
+    <_VSharpCompilerDll Condition="'$(_VSharpCompilerDll)' == '' and Exists('$(_VSharpRepoBin)\Release\net10.0\vsharpc.dll')">$(_VSharpRepoBin)\Release\net10.0\vsharpc.dll</_VSharpCompilerDll>
+  </PropertyGroup>
+
+  <Target Name="ResolveVSharpCompiler">
+    <PropertyGroup>
+      <_VSharpCommand Condition="'$(VSharpCompiler)' != '' and $(VSharpCompiler.EndsWith('.dll'))">dotnet exec &quot;$(VSharpCompiler)&quot;</_VSharpCommand>
+      <_VSharpCommand Condition="'$(_VSharpCommand)' == '' and '$(VSharpCompiler)' != ''">&quot;$(VSharpCompiler)&quot;</_VSharpCommand>
+      <_VSharpCommand Condition="'$(_VSharpCommand)' == '' and '$(_VSharpCompilerDll)' != ''">dotnet exec &quot;$([System.IO.Path]::GetFullPath('$(_VSharpCompilerDll)'))&quot;</_VSharpCommand>
+      <_VSharpCommand Condition="'$(_VSharpCommand)' == ''">vsharpc</_VSharpCommand>
+      <_VSharpOutDir Condition="!$([System.IO.Path]::IsPathRooted('$(OutputPath)'))">$(MSBuildProjectDirectory)\$(OutputPath)</_VSharpOutDir>
+      <_VSharpOutDir Condition="'$(_VSharpOutDir)' == ''">$(OutputPath)</_VSharpOutDir>
+      <_VSharpOut>$([System.IO.Path]::Combine($([System.IO.Path]::GetFullPath('$(_VSharpOutDir)')), '$(TargetName)$(TargetExt)'))</_VSharpOut>
+      <_VSharpFlags Condition="'$(VSharpVerify)' == 'false'"> --no-verify</_VSharpFlags>
+      <_VSharpFlags Condition="'$(VSharpTotal)' == 'true'">$(_VSharpFlags) --total</_VSharpFlags>
+      <_VSharpRefs>@(VSharpReference->'--reference &quot;%(FullPath)&quot;', ' ')</_VSharpRefs>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="CoreCompile"
+          DependsOnTargets="ResolveVSharpCompiler"
+          Condition="'$(DesignTimeBuild)' != 'true'"
+          Inputs="@(VSharpCompile);$(_VSharpCompilerDll)"
+          Outputs="$(_VSharpOut)">
+    <Error Condition="'@(VSharpCompile)' == ''" Text="A V# project needs at least one .vs file." />
+    <MakeDir Directories="$(_VSharpOutDir)" />
+    <Exec Command="$(_VSharpCommand) build @(VSharpCompile->'&quot;%(FullPath)&quot;', ' ') --out &quot;$(_VSharpOut)&quot;$(_VSharpFlags) $(_VSharpRefs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <ItemGroup>
+      <FileWrites Include="$(_VSharpOut)" />
+      <FileWrites Include="$([System.IO.Path]::Combine($([System.IO.Path]::GetFullPath('$(_VSharpOutDir)')), '$(TargetName).runtimeconfig.json'))" />
+    </ItemGroup>
+  </Target>
+
+  <!-- The compiler also copies the V# runtime beside the assembly. Clean removes that directory's build products. -->
+  <Target Name="CleanVSharpOutput" BeforeTargets="Clean" DependsOnTargets="ResolveVSharpCompiler">
+    <ItemGroup>
+      <_VSharpOutputFiles Include="$([System.IO.Path]::GetFullPath('$(_VSharpOutDir)'))\*.dll" />
+      <_VSharpOutputFiles Include="$([System.IO.Path]::GetFullPath('$(_VSharpOutDir)'))\*.json" />
+      <_VSharpOutputFiles Include="$([System.IO.Path]::GetFullPath('$(_VSharpOutDir)'))\*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_VSharpOutputFiles)" />
+  </Target>
+
+</Project>

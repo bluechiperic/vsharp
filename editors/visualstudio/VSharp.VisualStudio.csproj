@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>VSharp.VisualStudio</RootNamespace>
+    <AssemblyName>VSharp.VisualStudio</AssemblyName>
+    <GeneratePkgDefFile>false</GeneratePkgDefFile>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+    <LangVersion>latest</LangVersion>
+    <Version>0.3.7</Version>
+    <AssemblyVersion>0.3.7.0</AssemblyVersion>
+    <FileVersion>0.3.7.0</FileVersion>
+    <UseWPF>true</UseWPF>
+    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <VSSDKBuildToolsAutoSetup>true</VSSDKBuildToolsAutoSetup>
+    <IncludeAssemblyFromOutputFolderInVSIXContainer>false</IncludeAssemblyFromOutputFolderInVSIXContainer>
+    <DeployExtension>false</DeployExtension>
+    <NoWarn>$(NoWarn);VSSDK1001;VSTHRD010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.ComponentModel.Composition" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="18.12.1606" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.TemplateWizardInterface" Version="17.10.40170" PrivateAssets="all" />
+    <PackageReference Include="EnvDTE" Version="17.13.40008" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.ProjectSystem" Version="17.9.380" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="ProjectWizard.cs" />
+    <Compile Include="VSharpIcons.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="languages.pkgdef">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\vscode\language-configuration.json" Link="language-configuration.json">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\vscode\syntaxes\vsharp.tmLanguage.json" Link="Grammars\vsharp.tmLanguage.json">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\..\sdk\VSharp.NET.Sdk\Sdk\Sdk.props" Link="Sdk\Sdk.props">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\..\sdk\VSharp.NET.Sdk\Sdk\Sdk.targets" Link="Sdk\Sdk.targets">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="vsharp.imagemanifest">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\vsharp.ico">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\vsharp-file.ico">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Resource Include="Resources\vsharp-icon-16.png" />
+    <Resource Include="Resources\vsharp-icon-32.png" />
+    <Resource Include="Resources\vsharp-icon-48.png" />
+    <Resource Include="Resources\vsharp-icon-64.png" />
+    <Resource Include="Resources\vsharp-file-16.png" />
+    <Resource Include="Resources\vsharp-file-32.png" />
+    <Resource Include="Resources\vsharp-file-48.png" />
+    <Resource Include="Resources\vsharp-file-64.png" />
+    <Content Include="ItemTemplates\**\*">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ProjectTemplates\**\*">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+  </ItemGroup>
+
+</Project>

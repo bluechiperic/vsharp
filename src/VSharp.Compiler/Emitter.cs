@@ -79,10 +79,16 @@ public sealed class Emitter(ModuleDecl module, IReadOnlyList<string> sources, bo
     private readonly Stack<(Label Continue, Label Break, int TryDepth)> _loops = new();
     private int? _selfArg;
 
-    /// <summary>Writes Module.dll, its runtimeconfig and the runtime libraries into <paramref name="outDir"/>. Returns the dll path.</summary>
-    public string Emit(string outDir, bool verified)
+    /// <summary>
+    /// Writes the assembly, its runtimeconfig and the runtime libraries. The file is
+    /// <paramref name="outputFile"/> when set, otherwise <c>Module.dll</c> in <paramref name="outDir"/>.
+    /// </summary>
+    public string Emit(string outDir, bool verified, string? outputFile = null)
     {
-        var assembly = new PersistedAssemblyBuilder(new AssemblyName(module.Name) { Version = new Version(1, 0, 0, 0) }, typeof(object).Assembly);
+        var dll = Path.GetFullPath(outputFile ?? Path.Combine(outDir, module.Name + ".dll"));
+        outDir = Path.GetDirectoryName(dll)!;
+        var assemblyName = Path.GetFileNameWithoutExtension(dll);
+        var assembly = new PersistedAssemblyBuilder(new AssemblyName(assemblyName) { Version = new Version(1, 0, 0, 0) }, typeof(object).Assembly);
         _mb = assembly.DefineDynamicModule(module.Name);
         DefineTypes();
 
@@ -143,10 +149,9 @@ public sealed class Emitter(ModuleDecl module, IReadOnlyList<string> sources, bo
         Retarget.ToSystemRuntime(image);
 
         Directory.CreateDirectory(outDir);
-        var dll = Path.Combine(outDir, module.Name + ".dll");
         File.WriteAllBytes(dll, image);
         var v = Environment.Version;
-        File.WriteAllText(Path.Combine(outDir, module.Name + ".runtimeconfig.json"),
+        File.WriteAllText(Path.Combine(outDir, assemblyName + ".runtimeconfig.json"),
             $$"""
             {
               "runtimeOptions": {
